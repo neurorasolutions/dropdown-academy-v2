@@ -7,7 +7,6 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
 const supabase = createClient(
     supabaseUrl || 'https://demo.supabase.co',
     supabaseAnonKey || 'demo-key',
-    { db: { schema: 'dropdown' } }
 )
 
 // Hardcoded course prices — must match frontend to prevent tampering
