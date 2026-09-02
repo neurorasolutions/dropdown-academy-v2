@@ -51,16 +51,16 @@ export default function CourseDetail() {
             if (slug && !isDemoMode) {
                 try {
                     const { data, error } = await (supabase.from('dropdown_courses') as any)
-                        .select('*, course_modules(*, lessons(*))')
+                        .select('*, dropdown_course_modules(*, dropdown_lessons(*))')
                         .eq('slug', slug)
                         .single()
 
                     if (data && !error) {
-                        const sortedModules = (data.course_modules || [])
+                        const sortedModules = (data.dropdown_course_modules || [])
                             .map((m: any) => ({
                                 id: m.id,
                                 title: m.title,
-                                lessons: (m.lessons || [])
+                                lessons: (m.dropdown_lessons || [])
                                     .map((l: any) => ({
                                         id: l.id,
                                         title: l.title,
@@ -80,8 +80,8 @@ export default function CourseDetail() {
                             longDescription: staticCourseLong(data.slug) || data.description,
                             price: Number(data.price),
                             thumbnail: data.thumbnail_url || coursesData[data.slug]?.thumbnail || '',
-                            lessonsCount: (data.course_modules || []).reduce(
-                                (acc: number, m: any) => acc + (m.lessons?.length || 0), 0
+                            lessonsCount: (data.dropdown_course_modules || []).reduce(
+                                (acc: number, m: any) => acc + (m.dropdown_lessons?.length || 0), 0
                             ) || coursesData[data.slug]?.lessonsCount || 0,
                             duration: coursesData[data.slug]?.duration || '—',
                             features: coursesData[data.slug]?.features || [],

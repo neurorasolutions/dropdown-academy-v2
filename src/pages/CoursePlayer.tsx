@@ -58,17 +58,17 @@ export default function CoursePlayer() {
                 if (!isDemoMode) {
                     try {
                         const { data, error } = await (supabase.from('dropdown_courses') as any)
-                            .select('*, course_modules(*, lessons(*))')
+                            .select('*, dropdown_course_modules(*, dropdown_lessons(*))')
                             .eq('slug', slug)
                             .single()
 
                         if (data && !error) {
-                            const sortedModules = (data.course_modules || [])
+                            const sortedModules = (data.dropdown_course_modules || [])
                                 .map((m: any) => ({
                                     id: m.id,
                                     title: m.title,
                                     orderIndex: m.order_index,
-                                    lessons: (m.lessons || [])
+                                    lessons: (m.dropdown_lessons || [])
                                         .map((l: any) => ({
                                             id: l.id,
                                             title: l.title,
