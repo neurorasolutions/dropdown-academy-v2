@@ -22,6 +22,7 @@ const Cookies = lazy(() => import('@/pages/Cookies'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
+const AdminHome = lazy(() => import('@/pages/admin/AdminHome'))
 const AdminCourses = lazy(() => import('@/pages/admin/Courses'))
 const AdminSales = lazy(() => import('@/pages/admin/Sales'))
 const AdminDownloads = lazy(() => import('@/pages/admin/Downloads'))
@@ -76,7 +77,7 @@ const router = createBrowserRouter([
         path: '/admin',
         element: <ProtectedRoute requireAdmin>{withSuspense(AdminDashboard)}</ProtectedRoute>,
         children: [
-            { index: true, element: withSuspense(AdminDashboard) },
+            { index: true, element: withSuspense(AdminHome) },
             { path: 'courses', element: withSuspense(AdminCourses) },
             { path: 'sales', element: withSuspense(AdminSales) },
             { path: 'downloads', element: withSuspense(AdminDownloads) },
