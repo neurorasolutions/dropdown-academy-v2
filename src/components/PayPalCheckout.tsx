@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { recordPurchase } from '@/lib/purchases'
+import { supabase } from '@/lib/supabase'
 
 interface PayPalCheckoutProps {
     courseSlug: string
@@ -106,10 +107,22 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
                         setPaymentStatus('processing')
 
                         try {
+                            // Token di sessione fresco per l'autorizzazione server-side
+                            const { data: sessionData } = await supabase.auth.getSession()
+                            const userToken = sessionData?.session?.access_token
+
+                            if (!userToken) {
+                                throw new Error('Sessione scaduta: ricarica la pagina e accedi di nuovo.')
+                            }
+
                             const response = await fetch('/api/capture-order', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ orderID: data.orderID }),
+                                body: JSON.stringify({
+                                    orderID: data.orderID,
+                                    courseSlug,
+                                    userToken,
+                                }),
                             })
 
                             if (!response.ok) {
@@ -121,7 +134,13 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
                             if (captureData.success) {
                                 setTransactionId(captureData.transactionId)
                                 setPaymentStatus('success')
-                                await recordPurchase(userId, courseSlug, price, captureData.transactionId)
+                                // La registrazione avviene server-side nel capture;
+                                // recordPurchase qui è fallback di sicurezza (idempotente per RLS).
+                                try {
+                                    await recordPurchase(userId, courseSlug, price, captureData.transactionId)
+                                } catch (e) {
+                                    console.error('Fallback client purchase record failed:', e)
+                                }
                                 onSuccess?.(captureData.transactionId)
                             } else {
                                 throw new Error(captureData.error || 'Pagamento non completato')
