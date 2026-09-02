@@ -29,7 +29,7 @@ export async function getPurchasedCourseSlugs(userId: string): Promise<string[]>
             .from('dropdown_purchases') as any)
             .select(`
                 course_id,
-                courses (
+                dropdown_courses (
                     slug
                 )
             `)
