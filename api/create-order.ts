@@ -96,7 +96,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(404).json({ error: 'Course not found' })
         }
 
-        const accessToken = await getPayPalAccessToken()
+        let accessToken: string
+        try {
+            accessToken = await getPayPalAccessToken()
+        } catch (authError) {
+            console.error('PayPal auth failed:', authError)
+            return res.status(502).json({ error: 'PayPal authentication failed', hint: 'Check VITE_PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET and PAYPAL_MODE on Vercel' })
+        }
 
         // Create PayPal order with server-validated price
         const response = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
@@ -120,9 +126,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
 
         if (!response.ok) {
-            const errorData = await response.json()
-            console.error('PayPal create order error:', errorData)
-            return res.status(500).json({ error: 'Failed to create PayPal order' })
+            const errorData = await response.json().catch(() => ({}))
+            console.error('PayPal create order error:', JSON.stringify(errorData))
+            return res.status(502).json({
+                error: 'Failed to create PayPal order',
+                detail: errorData?.error_description || errorData?.message || 'unknown',
+            })
         }
 
         const order = await response.json()
