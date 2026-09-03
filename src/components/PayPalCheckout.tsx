@@ -17,6 +17,12 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
     const [errorMessage, setErrorMessage] = useState('')
     const [transactionId, setTransactionId] = useState('')
+    const [debugInfo, setDebugInfo] = useState<string[]>([])
+
+    const addDebug = (msg: string) => {
+        console.log('[PP-DEBUG]', msg)
+        setDebugInfo((prev) => [...prev, msg])
+    }
 
     if (paymentStatus === 'success') {
         return (
@@ -104,12 +110,14 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
                         }
                     }}
                     onApprove={async (data) => {
+                        addDebug('onApprove chiamato, orderID=' + data.orderID)
                         setPaymentStatus('processing')
 
                         try {
                             // Token di sessione fresco per l'autorizzazione server-side
                             const { data: sessionData } = await supabase.auth.getSession()
                             const userToken = sessionData?.session?.access_token
+                            addDebug('token presente: ' + (userToken ? 'SI' : 'NO'))
 
                             if (!userToken) {
                                 throw new Error('Sessione scaduta: ricarica la pagina e accedi di nuovo.')
@@ -129,7 +137,9 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
                                 throw new Error('Errore nella conferma del pagamento')
                             }
 
+                            addDebug('capture response status: ' + response.status)
                             const captureData = await response.json()
+                            addDebug('capture response: ' + JSON.stringify(captureData).slice(0, 300))
 
                             if (captureData.success) {
                                 setTransactionId(captureData.transactionId)
@@ -156,11 +166,17 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
                         }
                     }}
                     onError={(err) => {
+                        addDebug('onError PayPal: ' + String(err))
                         console.error('PayPal error:', err)
                         setPaymentStatus('error')
                         setErrorMessage('Errore PayPal. Riprova più tardi.')
                     }}
+                    onClick={(_data, actions) => {
+                        addDebug('onClick: inizio pagamento')
+                        return actions.resolve()
+                    }}
                     onCancel={() => {
+                        addDebug('onCancel: pagamento annullato')
                         setPaymentStatus('idle')
                     }}
                 />
@@ -169,6 +185,15 @@ export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSucce
             <p className="text-center text-xs text-ink-400">
                 Pagamento sicuro tramite PayPal. I tuoi dati sono protetti.
             </p>
+
+            {debugInfo.length > 0 && (
+                <div className="mt-4 p-3 bg-ivory-200 rounded-xl text-left">
+                    <p className="text-xs font-bold text-ink-700 mb-1">DEBUG (temporaneo):</p>
+                    {debugInfo.map((line, i) => (
+                        <p key={i} className="text-xs text-ink-500 font-mono break-all">{line}</p>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }
