@@ -45,7 +45,7 @@ export async function getPurchasedCourseSlugs(userId: string): Promise<string[]>
 
         // Extract slugs from joined course table
         return data
-            .map((item: any) => item.courses?.slug)
+            .map((item: any) => item.dropdown_courses?.slug)
             .filter((slug: any): slug is string => typeof slug === 'string')
     } catch (e) {
         console.error('Exception fetching purchases:', e)
