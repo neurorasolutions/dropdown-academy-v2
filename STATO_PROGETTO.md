@@ -1,6 +1,21 @@
 # Dropdown Academy v2 — Stato Progetto
 
-Ultimo aggiornamento: 2 settembre 2026, fine sessione.
+Ultimo aggiornamento: 3 settembre 2026, fine sessione.
+
+## AGGIORNAMENTO 3 SETTEMBRE — SITO IN PRODUZIONE
+- Flusso e-commerce COMPLETO verificato: registrazione → login → acquisto PayPal (sandbox) → registrazione acquisto server-side → accesso corso. Tutto funziona.
+- Bug risolti: relazione embed dropdown_courses in getPurchasedCourseSlugs (ultima pezza)
+- Debug rimosso (pannello checkout + api/debug-env.ts), eslint.config.js aggiunto (ESLint 9)
+- PayPal LIVE attivo: VITE_PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_MODE=live su Vercel (verificato: orderID reali)
+- ATTENZIONE nome variabile: VITE_PAYPAL_CLIENT_ID (non PAYPAL_CLIENT_ID) — l'utente l'aveva sbagliata
+- DOMINIO LIVE: https://www.dropdownacademy.com (DNS su Squarespace, ex Google Domains)
+  - Record: A @ 76.76.21.21 + CNAME www cname.vercel-dns.com (legacy ok; Vercel raccomanda 216.150.1.1 / e67830b761fa924d.vercel-dns-016.com opzionale)
+  - Vecchio sito Google Sites smontato (era ghs.googlehosted.com)
+  - VITE_APP_URL aggiornato a https://www.dropdownacademy.com
+  - Supabase Auth: Site URL https://www.dropdownacademy.com + Redirect URLs ** per entrambi i domini
+  - Attesa propagazione cache DNS (TTL 4h del vecchio record) il 3 set sera
+- PENDING: test acquisto reale (Pigments 15€) + rimborso; area admin dati reali; attestati; sitemap; video lezioni (video_id vuota)
+- SQL pulizia eseguito: corso test-acquisto-010 eliminato + utenti diagnostico rimossi
 
 ## Cosa è stato fatto
 
