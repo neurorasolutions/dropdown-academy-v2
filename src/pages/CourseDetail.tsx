@@ -231,6 +231,29 @@ export default function CourseDetail() {
                             ))}
                         </div>
                     </section>
+                    {/* Cross-sell Patreon */}
+                    <section>
+                        <div className="card p-6 bg-ivory-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <p className="eyebrow mb-1">Community</p>
+                                <h3 className="font-serif text-lg font-semibold">
+                                    Vuoi più contenuti, ogni mese?
+                                </h3>
+                                <p className="text-sm text-ink-500 mt-1">
+                                  Tutorial esclusivi, progetti e community su Patreon, da €10/mese.
+                                </p>
+                            </div>
+                            <a
+                                href="https://www.patreon.com/c/dropdown"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary shrink-0 text-sm"
+                            >
+                                Scopri Patreon
+                                <span aria-hidden>↗</span>
+                            </a>
+                        </div>
+                    </section>
                 </div>
 
                 {/* Sidebar acquisto */}

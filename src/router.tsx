@@ -8,6 +8,7 @@ const Home = lazy(() => import('@/pages/Home'))
 const Courses = lazy(() => import('@/pages/Courses'))
 const CourseDetail = lazy(() => import('@/pages/CourseDetail'))
 const InPersonCourses = lazy(() => import('@/pages/InPersonCourses'))
+const Community = lazy(() => import('@/pages/Community'))
 const FreeVideos = lazy(() => import('@/pages/FreeVideos'))
 const Downloads = lazy(() => import('@/pages/Downloads'))
 const Contact = lazy(() => import('@/pages/Contact'))
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
             { path: 'courses', element: withSuspense(Courses) },
             { path: 'courses/:slug', element: withSuspense(CourseDetail) },
             { path: 'in-presenza', element: withSuspense(InPersonCourses) },
+            { path: 'community', element: withSuspense(Community) },
             { path: 'free-videos', element: withSuspense(FreeVideos) },
             { path: 'downloads', element: withSuspense(Downloads) },
             { path: 'contact', element: withSuspense(Contact) },

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Infinity as InfinityIcon, MessageCircle, Award, PlayCircle } from 'lucide-react'
+import { ArrowRight, Infinity as InfinityIcon, MessageCircle, Award, PlayCircle, ExternalLink } from 'lucide-react'
 import { useRef } from 'react'
 import { coursesData } from '@/data/courses'
 
@@ -297,7 +297,36 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* ─── Community Patreon ─── */}
+            <section className="container-site py-20 lg:py-28">
+                <motion.div
+                    {...fadeUp}
+                    className="card p-8 lg:p-12 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center"
+                >
+                    <div>
+                        <p className="eyebrow mb-3">Oltre i corsi</p>
+                        <h2 className="font-serif text-2xl lg:text-3xl font-semibold">
+                            La community continua <span className="italic text-wine-700">su Patreon</span>
+                        </h2>
+                        <p className="mt-3 text-ink-500 leading-relaxed max-w-xl">
+                            Tutorial mensili, progetti scaricabili e confronto diretto con altri produttori.
+                            Da €10/mese, cancelli quando vuoi.
+                        </p>
+                    </div>
+                    <a
+                        href="https://www.patreon.com/c/dropdown"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary shrink-0"
+                    >
+                        Unisciti su Patreon
+                        <ExternalLink className="w-4 h-4" aria-hidden />
+                    </a>
+                </motion.div>
+            </section>
+
             {/* ─── CTA finale ─── */}
+
             <section className="container-site py-20 lg:py-28">
                 <motion.div
                     {...fadeUp}

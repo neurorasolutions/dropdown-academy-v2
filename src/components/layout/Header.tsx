@@ -7,7 +7,7 @@ const navItems = [
     { label: 'Home', path: '/' },
     { label: 'Corsi Online', path: '/courses' },
     { label: 'In Presenza', path: '/in-presenza' },
-    { label: 'Risorse Gratuite', path: '/free-videos' },
+    { label: 'Community', path: '/community' },
     { label: 'FAQ', path: '/faq' },
     { label: 'Contatti', path: '/contact' },
 ]

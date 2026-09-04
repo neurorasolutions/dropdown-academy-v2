@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import { Youtube, Instagram, Facebook, Mail } from 'lucide-react'
+import { PatreonIcon } from '@/components/common/PatreonIcon'
 
 const footerNav = {
     nav: [
         { label: 'Home', path: '/' },
         { label: 'Corsi Online', path: '/courses' },
         { label: 'In Presenza', path: '/in-presenza' },
-        { label: 'Risorse Gratuite', path: '/free-videos' },
+        { label: 'Community', path: '/community' },
         { label: 'FAQ', path: '/faq' },
         { label: 'Contatti', path: '/contact' },
     ],
@@ -22,8 +23,9 @@ const footerNav = {
     ],
 }
 
-const socialLinks = [
+const socialLinks: { icon: 'patreon' | typeof Youtube; href: string; label: string }[] = [
     { icon: Youtube, href: 'https://youtube.com/@dropdownacademy', label: 'YouTube' },
+    { icon: 'patreon', href: 'https://www.patreon.com/c/dropdown', label: 'Patreon' },
     { icon: Instagram, href: 'https://instagram.com/dropdownacademy', label: 'Instagram' },
     { icon: Facebook, href: 'https://facebook.com/dropdownacademy', label: 'Facebook' },
 ]
@@ -122,7 +124,11 @@ export function Footer() {
                                     className="p-2.5 rounded-full border border-ivory-200/20 text-ivory-200/80 hover:text-brass-300 hover:border-brass-300/40 transition-colors"
                                     aria-label={label}
                                 >
-                                    <Icon className="w-4 h-4" aria-hidden />
+                                    {'string' === typeof Icon ? (
+                                        <PatreonIcon className="w-4 h-4" />
+                                    ) : (
+                                        <Icon className="w-4 h-4" aria-hidden />
+                                    )}
                                 </a>
                             ))}
                         </div>
