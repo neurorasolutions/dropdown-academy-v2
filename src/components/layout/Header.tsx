@@ -47,7 +47,7 @@ export function Header() {
             <div className="container-site">
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3" aria-label="Dropdown Academy — Home">
+                    <Link to="/" className="flex items-center gap-3 -ml-1.5 py-1.5 pr-1.5 -mr-1.5" aria-label="Dropdown Academy — Home">
                         <img
                             src="/logo-dark.png"
                             alt="Dropdown Academy"
