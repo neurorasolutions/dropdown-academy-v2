@@ -9,6 +9,7 @@ import { getPurchasedCourseSlugs } from '@/lib/purchases'
 import { supabase, isDemoMode } from '@/lib/supabase'
 import { PayPalCheckout } from '@/components/PayPalCheckout'
 import { recordPurchase } from '@/lib/purchases'
+import { useCookieStore } from '@/store/cookieStore'
 
 interface ModuleData {
     id: string
@@ -316,6 +317,23 @@ function CheckoutBox({
     userId: string
     onPurchased: (transactionId: string) => void | Promise<void>
 }) {
+    const { consent, openPreferences } = useCookieStore()
+    const paymentsAllowed = consent?.payments === true
+
+    if (!paymentsAllowed) {
+        return (
+            <div className="p-6 bg-ivory-50 border border-ivory-300 rounded-xl text-center space-y-3">
+                <ShieldCheck className="w-8 h-8 text-wine-700 mx-auto" aria-hidden />
+                <p className="text-sm text-ink-700 leading-relaxed">
+                    Per completare l'acquisto è necessario attivare i cookie di pagamento (PayPal).
+                </p>
+                <button onClick={openPreferences} className="btn-primary text-sm px-5 py-2.5">
+                    Gestisci preferenze cookie
+                </button>
+            </div>
+        )
+    }
+
     return (
         <PayPalScriptProvider
             options={{
