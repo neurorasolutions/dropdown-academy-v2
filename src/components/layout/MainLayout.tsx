@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { ToastContainer } from '@/components/common/ToastContainer'
+import { CookieBanner } from '@/components/common/CookieBanner'
 
 export function MainLayout() {
     const { pathname } = useLocation()
@@ -25,6 +26,7 @@ export function MainLayout() {
             </main>
             <Footer />
             <ToastContainer />
+            <CookieBanner />
         </div>
     )
 }

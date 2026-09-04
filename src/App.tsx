@@ -3,7 +3,6 @@ import { router } from './router'
 import { useAuthStore } from '@/store/authStore'
 import { useEffect } from 'react'
 import { ToastContainer } from '@/components/common/ToastContainer'
-import { CookieBanner } from '@/components/common/CookieBanner'
 import { ConditionalPayPalProvider } from '@/components/common/ConditionalPayPalProvider'
 
 export default function App() {
@@ -17,7 +16,6 @@ export default function App() {
         <ConditionalPayPalProvider>
             <RouterProvider router={router} />
             <ToastContainer />
-            <CookieBanner />
         </ConditionalPayPalProvider>
     )
 }
