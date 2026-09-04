@@ -14,6 +14,9 @@ Ultimo aggiornamento: 3 settembre 2026, fine sessione.
   - VITE_APP_URL aggiornato a https://www.dropdownacademy.com
   - Supabase Auth: Site URL https://www.dropdownacademy.com + Redirect URLs ** per entrambi i domini
   - Attesa propagazione cache DNS (TTL 4h del vecchio record) il 3 set sera
+- Patreon integrato (4 set): pagina /community, sezione Home, banner cross-sell nel dettaglio corso, icona footer+header nav. Link: https://www.patreon.com/c/dropdown (€10/mese)
+- GDPR cookie banner completato e verificato e2e (PayPal SDK bloccato pre-consenso, consenso just-in-time al checkout)
+- RISPETTIVA: template email "Confirm signup" rebrandizzato (testo inviato all'utente; ATTN: template condiviso con FinFlow)
 - PENDING: test acquisto reale (Pigments 15€) + rimborso; area admin dati reali; attestati; sitemap; video lezioni (video_id vuota)
 - SQL pulizia eseguito: corso test-acquisto-010 eliminato + utenti diagnostico rimossi
 
