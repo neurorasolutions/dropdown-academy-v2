@@ -10,6 +10,8 @@ import { useAuthStore } from '@/store/authStore'
 import { getPurchasedCourseSlugs } from '@/lib/purchases'
 import { PayPalCheckout } from '@/components/PayPalCheckout'
 import { useCookieStore } from '@/store/cookieStore'
+import { Metadata } from '@/components/common/Metadata'
+import { StructuredData } from '@/components/common/StructuredData'
 
 const levelLabels: Record<string, string> = {
     beginner: 'Principiante',
@@ -32,7 +34,6 @@ export default function CourseDetail() {
             .catch(()=>{}).finally(()=>{if(active)setIsLoadingAccess(false)})
         return ()=>{active=false}
     },[user,slug])
-    useEffect(()=>{if(course)document.title=`${course.title} | Dropdown Academy`},[course])
     if(loading||error)return <div className="container-site py-12"><DataState loading={loading} error={error} retry={reload}/></div>
     if (!course) {
         return (
@@ -51,9 +52,52 @@ export default function CourseDetail() {
     const freeLessons = course.modules.reduce(
         (acc, m) => acc + m.lessons.filter((l) => l.isFree).length, 0
     )
+    const totalMinutes = course.modules
+        .flatMap((m) => m.lessons)
+        .reduce((acc, l) => acc + (Number(l.duration.split(':')[0]) || 0), 0)
 
     return (
         <div className="pb-24">
+            <Metadata
+                title={course.title}
+                description={course.description}
+                image={course.thumbnail}
+            />
+            <StructuredData
+                data={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Course',
+                    name: course.title,
+                    description: course.description,
+                    image: course.thumbnail,
+                    url: `https://www.dropdownacademy.com/courses/${course.slug}`,
+                    provider: {
+                        '@type': 'EducationalOrganization',
+                        name: 'Dropdown Academy',
+                        url: 'https://www.dropdownacademy.com/',
+                    },
+                    ...(totalLessons
+                        ? {
+                              hasCourseInstance: {
+                                  '@type': 'CourseInstance',
+                                  courseMode: 'online',
+                              },
+                              timeRequired: `PT${totalMinutes}M`,
+                          }
+                        : {}),
+                    ...(course.price > 0
+                        ? {
+                              offers: {
+                                  '@type': 'Offer',
+                                  price: course.price.toFixed(2),
+                                  priceCurrency: 'EUR',
+                                  availability: 'https://schema.org/InStock',
+                                  url: `https://www.dropdownacademy.com/courses/${course.slug}`,
+                              },
+                          }
+                        : {}),
+                }}
+            />
             {/* Hero */}
             <section className="relative h-[45vh] min-h-[360px] overflow-hidden">
                 <img
