@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { GoogleButton } from '@/components/common/GoogleButton'
 
 const registerSchema = z.object({
     fullName: z.string().min(2, 'Inserisci il tuo nome completo'),
@@ -109,6 +110,14 @@ export default function Register() {
                                     {formError}
                                 </div>
                             )}
+
+                            <GoogleButton redirect={redirect} label="Registrati con Google" />
+
+                            <div className="flex items-center gap-3" aria-hidden>
+                                <span className="h-px flex-1 bg-ivory-300" />
+                                <span className="text-xs text-ink-400 uppercase tracking-widest2">oppure</span>
+                                <span className="h-px flex-1 bg-ivory-300" />
+                            </div>
 
                             <div>
                                 <label htmlFor="fullName" className="block text-sm font-medium text-ink-700 mb-1.5">

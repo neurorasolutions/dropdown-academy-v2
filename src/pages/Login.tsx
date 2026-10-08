@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+import { GoogleButton } from '@/components/common/GoogleButton'
 
 const loginSchema = z.object({
     email: z.string().email('Email non valida'),
@@ -92,6 +93,14 @@ export default function Login() {
                             {formError}
                         </div>
                     )}
+
+                    <GoogleButton redirect={from} />
+
+                    <div className="flex items-center gap-3" aria-hidden>
+                        <span className="h-px flex-1 bg-ivory-300" />
+                        <span className="text-xs text-ink-400 uppercase tracking-widest2">oppure</span>
+                        <span className="h-px flex-1 bg-ivory-300" />
+                    </div>
 
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-ink-700 mb-1.5">

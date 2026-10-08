@@ -14,6 +14,7 @@ interface AuthState {
 
     initialize: () => Promise<void>
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+    signInWithGoogle: (redirect: string) => Promise<{ error: Error | null }>
     signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
     updateProfile: (updates: Pick<Partial<Profile>, 'full_name' | 'avatar_url'>) => Promise<{ error: Error | null }>
@@ -141,6 +142,36 @@ export const useAuthStore = create<AuthState>()(
                             isLoading: false,
                         })
                     }
+
+                    return { error: null }
+                } catch (error) {
+                    set({ isLoading: false })
+                    return { error: error as Error }
+                }
+            },
+
+            signInWithGoogle: async (redirect) => {
+                set({ isLoading: true })
+
+                if (isDemoMode) {
+                    set({
+                        user: demoUser,
+                        profile: demoProfile,
+                        isLoading: false,
+                    })
+                    return { error: null }
+                }
+
+                try {
+                    const target = /^\/(?![\\/])/.test(redirect) ? redirect : '/dashboard'
+                    const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(target)}`,
+                        },
+                    })
+
+                    if (error) throw error
 
                     return { error: null }
                 } catch (error) {
