@@ -55,6 +55,87 @@ export async function getMessages(): Promise<ContactMessage[]> {
             .range(from, to),
     )
 }
+export type Engagement = {
+    student: string
+    email: string
+    course: string
+    completed: number
+    total: number
+    percent: number
+    purchasedAt: string
+    lastActivity: string | null
+}
+
+export async function getEngagement(): Promise<Engagement[]> {
+    if (isDemoMode) return []
+    const [purchases, courses, modules, lessons, progress, profiles] = await Promise.all([
+        readAll((from, to) =>
+            supabase
+                .from('dropdown_purchases')
+                .select('user_id,course_id,payment_date')
+                .eq('status', 'completed')
+                .order('id')
+                .range(from, to),
+        ),
+        readAll((from, to) => supabase.from('dropdown_courses').select('id,title').order('id').range(from, to)),
+        readAll((from, to) =>
+            supabase.from('dropdown_course_modules').select('id,course_id').order('id').range(from, to),
+        ),
+        readAll((from, to) =>
+            supabase.from('dropdown_lessons').select('id,module_id,video_id').order('id').range(from, to),
+        ),
+        readAll((from, to) =>
+            supabase
+                .from('dropdown_user_progress')
+                .select('user_id,lesson_id,completed,updated_at')
+                .order('id')
+                .range(from, to),
+        ),
+        readAll((from, to) =>
+            supabase.from('dropdown_profiles').select('id,email,full_name').order('id').range(from, to),
+        ),
+    ])
+    const courseTitle = new Map(courses.map((c) => [c.id, c.title]))
+    const moduleCourse = new Map(modules.map((m) => [m.id, m.course_id]))
+    const lessonCourse = new Map<string, string>()
+    for (const l of lessons) {
+        const cid = moduleCourse.get(l.module_id)
+        if (cid && l.video_id && l.video_id.trim()) lessonCourse.set(l.id, cid)
+    }
+    const totalByCourse = new Map<string, number>()
+    for (const cid of lessonCourse.values()) totalByCourse.set(cid, (totalByCourse.get(cid) || 0) + 1)
+    const doneByUserCourse = new Map<string, number>()
+    const lastByUserCourse = new Map<string, string>()
+    for (const p of progress) {
+        if (!p.completed) continue
+        const cid = lessonCourse.get(p.lesson_id)
+        if (!cid) continue
+        const key = `${p.user_id}|${cid}`
+        doneByUserCourse.set(key, (doneByUserCourse.get(key) || 0) + 1)
+        if (p.updated_at && (!lastByUserCourse.has(key) || p.updated_at > lastByUserCourse.get(key)!))
+            lastByUserCourse.set(key, p.updated_at)
+    }
+    const profileMap = new Map(profiles.map((p) => [p.id, p]))
+    const rows: Engagement[] = []
+    for (const purchase of purchases) {
+        const key = `${purchase.user_id}|${purchase.course_id}`
+        const total = totalByCourse.get(purchase.course_id) || 0
+        const completed = doneByUserCourse.get(key) || 0
+        const profile = profileMap.get(purchase.user_id)
+        rows.push({
+            student: profile?.full_name || 'Studente',
+            email: profile?.email || '—',
+            course: courseTitle.get(purchase.course_id) || 'Corso',
+            completed,
+            total,
+            percent: total ? Math.round((100 * completed) / total) : 0,
+            purchasedAt: purchase.payment_date,
+            lastActivity: lastByUserCourse.get(key) || null,
+        })
+    }
+    return rows.sort((a, b) => a.percent - b.percent)
+}
+
 export async function getOverview() {
     if (isDemoMode) return { courses: [], students: 0, sales: 0, revenue: 0, unread: 0 }
     const [courses, students, sales, messages] = await Promise.all([

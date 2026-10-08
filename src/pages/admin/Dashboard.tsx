@@ -1,11 +1,12 @@
 import { Metadata } from '@/components/common/Metadata'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, ShoppingBag, Download, Mail, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, BookOpen, ShoppingBag, Activity, Download, Mail, ArrowLeft } from 'lucide-react'
 
 const adminNav = [
     { path: '/admin', label: 'Panoramica', icon: LayoutDashboard, end: true },
     { path: '/admin/courses', label: 'Corsi', icon: BookOpen, end: false },
     { path: '/admin/sales', label: 'Vendite', icon: ShoppingBag, end: false },
+    { path: '/admin/monitoraggio', label: 'Monitoraggio', icon: Activity, end: false },
     { path: '/admin/downloads', label: 'Download', icon: Download, end: false },
     { path: '/admin/messages', label: 'Messaggi', icon: Mail, end: false },
 ]

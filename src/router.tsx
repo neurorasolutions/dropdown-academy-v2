@@ -29,6 +29,7 @@ const AdminCourseEditor = lazy(() => import('@/pages/admin/CourseEditor'))
 const Certificate = lazy(() => import('@/pages/Certificate'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 const AdminSales = lazy(() => import('@/pages/admin/Sales'))
+const AdminEngagement = lazy(() => import('@/pages/admin/Engagement'))
 const AdminDownloads = lazy(() => import('@/pages/admin/Downloads'))
 const AdminMessages = lazy(() => import('@/pages/admin/Messages'))
 
@@ -80,6 +81,7 @@ const router = createBrowserRouter([
             { path: 'courses', element: withSuspense(AdminCourses) },
             { path: 'courses/:id', element: withSuspense(AdminCourseEditor) },
             { path: 'sales', element: withSuspense(AdminSales) },
+            { path: 'monitoraggio', element: withSuspense(AdminEngagement) },
             { path: 'downloads', element: withSuspense(AdminDownloads) },
             { path: 'messages', element: withSuspense(AdminMessages) },
         ],
