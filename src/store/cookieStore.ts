@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 export type CookieConsent = {
     necessary: true
     payments: boolean
+    analytics: boolean
     decidedAt: string | null
 }
 
@@ -16,12 +17,13 @@ interface CookieState {
     closePreferences: () => void
     acceptAll: () => void
     rejectOptional: () => void
-    savePreferences: (prefs: { payments: boolean }) => void
+    savePreferences: (prefs: { payments: boolean; analytics: boolean }) => void
 }
 
 const defaultConsent: CookieConsent = {
     necessary: true,
     payments: false,
+    analytics: false,
     decidedAt: null,
 }
 
@@ -39,7 +41,12 @@ export const useCookieStore = create<CookieState>()(
 
             acceptAll: () => {
                 set({
-                    consent: { necessary: true, payments: true, decidedAt: new Date().toISOString() },
+                    consent: {
+                        necessary: true,
+                        payments: true,
+                        analytics: true,
+                        decidedAt: new Date().toISOString(),
+                    },
                     bannerOpen: false,
                     preferencesOpen: false,
                 })
@@ -58,6 +65,7 @@ export const useCookieStore = create<CookieState>()(
                     consent: {
                         necessary: true,
                         payments: prefs.payments,
+                        analytics: prefs.analytics,
                         decidedAt: new Date().toISOString(),
                     },
                     bannerOpen: false,

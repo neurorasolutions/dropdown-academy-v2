@@ -18,6 +18,7 @@ export function CookieBanner() {
     } = useCookieStore()
 
     const [payments, setPayments] = useState(false)
+    const [analytics, setAnalytics] = useState(false)
 
     useEffect(() => {
         // Banner mostrato solo se l'utente non ha ancora deciso
@@ -28,7 +29,10 @@ export function CookieBanner() {
     }, [consent, showBanner])
 
     useEffect(() => {
-        if (preferencesOpen) setPayments(consent?.payments ?? false)
+        if (preferencesOpen) {
+            setPayments(consent?.payments ?? false)
+            setAnalytics(consent?.analytics ?? false)
+        }
     }, [preferencesOpen, consent])
 
     return (
@@ -55,7 +59,7 @@ export function CookieBanner() {
                                     <p className="text-xs text-ink-500 leading-relaxed mt-1">
                                         Usiamo cookie tecnici per il funzionamento del sito (accesso ai corsi,
                                         carrello). Con il tuo consenso attiviamo anche i cookie dei servizi
-                                        di pagamento. Dettagli nella{' '}
+                                        di pagamento e di analisi statistica. Dettagli nella{' '}
                                         <Link to="/cookies" className="text-wine-700 underline underline-offset-2">
                                             Cookie Policy
                                         </Link>
@@ -151,10 +155,35 @@ export function CookieBanner() {
                                         chiesto il consenso al momento del checkout.
                                     </p>
                                 </div>
+                                {/* Analisi */}
+                                <div className="border border-ivory-300 rounded-xl p-4">
+                                    <div className="flex items-center justify-between gap-4 mb-2">
+                                        <h3 className="font-medium">Cookie di analisi</h3>
+                                        <button
+                                            onClick={() => setAnalytics(!analytics)}
+                                            role="switch"
+                                            aria-checked={analytics}
+                                            className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${
+                                                analytics ? 'bg-wine-700' : 'bg-ivory-300'
+                                            }`}
+                                            aria-label="Attiva cookie di analisi"
+                                        >
+                                            <span
+                                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                                    analytics ? 'translate-x-5' : ''
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    <p className="text-sm text-ink-500 leading-relaxed">
+                                        Google Analytics, in forma anonima, per capire quali contenuti funzionano
+                                        e migliorare il sito. Nessun dato venduto a terzi.
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="p-6 pt-0 flex flex-col sm:flex-row gap-2">
-                                <button onClick={() => savePreferences({ payments })} className="btn-primary flex-1 text-sm cursor-pointer">
+                                <button onClick={() => savePreferences({ payments, analytics })} className="btn-primary flex-1 text-sm cursor-pointer">
                                     Salva preferenze
                                 </button>
                                 <button onClick={acceptAll} className="btn-secondary flex-1 text-sm cursor-pointer">

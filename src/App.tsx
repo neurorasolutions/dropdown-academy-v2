@@ -3,6 +3,7 @@ import { router } from './router'
 import { useAuthStore } from '@/store/authStore'
 import { useEffect } from 'react'
 import { ToastContainer } from '@/components/common/ToastContainer'
+import { Analytics } from '@/components/common/Analytics'
 import { MotionConfig } from 'framer-motion'
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
     return (
         <MotionConfig reducedMotion="user">
             <RouterProvider router={router} />
+            <Analytics />
             <ToastContainer />
         </MotionConfig>
     )
