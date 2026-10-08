@@ -7,3 +7,4 @@ dist-ssr
 .cache/
 .env.*
 !.env.example
+.vercel
