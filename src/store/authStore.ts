@@ -35,6 +35,7 @@ const demoProfile: Profile = {
     full_name: 'Demo User',
     avatar_url: null,
     is_admin: true,
+    welcome_sent: true,
     created_at: new Date().toISOString(),
 }
 

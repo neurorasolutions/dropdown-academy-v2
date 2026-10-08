@@ -5,6 +5,7 @@ import { BookOpen, PlayCircle, Download as DownloadIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { getPurchasedCourseSlugs, getCompletedLessons } from '@/lib/purchases'
 import { getCourse } from '@/lib/catalog'
+import { sendWelcomeIfNeeded } from '@/lib/notifications'
 
 interface PurchasedCourse {
     slug: string
@@ -24,6 +25,7 @@ export default function Dashboard() {
     useEffect(() => {
         async function loadCourses() {
             if (!user) return
+            void sendWelcomeIfNeeded()
             try {
                 const slugs = await getPurchasedCourseSlugs(user.id)
                 const results = await Promise.all(slugs.map(async slug => {

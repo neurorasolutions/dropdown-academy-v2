@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { GoogleButton } from '@/components/common/GoogleButton'
+import { requestPasswordReset } from '@/lib/notifications'
 
 const loginSchema = z.object({
     email: z.string().email('Email non valida'),
@@ -62,7 +62,7 @@ export default function Login() {
         const email=getValues('email')
         if(!z.string().email().safeParse(email).success){setResetMessage('Inserisci prima la tua email.');return}
         setIsLoading(true)
-        try {const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${window.location.origin}/reset-password`});if(error)throw error;setResetMessage('Se l’indirizzo è registrato, riceverai un link per reimpostare la password.')}
+        try {const {error}=await requestPasswordReset(email);if(error)throw error;setResetMessage('Se l’indirizzo è registrato, riceverai un link per reimpostare la password.')}
         catch {setResetMessage('Invio non riuscito. Riprova più tardi.')}
         finally {setIsLoading(false)}
     }
