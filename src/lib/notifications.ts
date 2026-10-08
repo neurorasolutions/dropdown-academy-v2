@@ -1,5 +1,3 @@
-import { supabase } from '@/lib/supabase'
-
 export async function requestPasswordReset(email: string): Promise<{ error: Error | null }> {
     const res = await fetch('/api/request-reset', {
         method: 'POST',
@@ -10,11 +8,10 @@ export async function requestPasswordReset(email: string): Promise<{ error: Erro
     return { error: null }
 }
 
-export async function sendWelcomeIfNeeded(): Promise<void> {
-    const { data } = await supabase.auth.getSession()
-    if (!data.session) return
+export async function sendWelcomeEmail(email: string): Promise<void> {
     await fetch('/api/welcome', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
     }).catch(() => undefined)
 }

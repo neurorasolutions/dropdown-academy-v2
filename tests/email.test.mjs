@@ -21,10 +21,11 @@ process.env.VITE_APP_URL = 'https://www.dropdownacademy.com'
 process.env.RESEND_API_KEY = 'test-resend-key'
 
 const user = '11111111-1111-4111-8111-111111111111'
-let profile, sent, invalidToken, generateError, dbDown, resendDown
+let profile, sent, invalidToken, generateError, dbDown, resendDown, fresh
 
 function reset() {
-    profile = { full_name: 'Mario Rossi', welcome_sent: false }
+    fresh = new Date().toISOString()
+    profile = [{ id: user, full_name: 'Mario Rossi', welcome_sent: false, created_at: fresh }]
     sent = []
     invalidToken = false
     generateError = false
@@ -47,8 +48,11 @@ globalThis.fetch = async (input, init = {}) => {
     }
     if (u.pathname.includes('dropdown_profiles')) {
         if (dbDown) return json({ message: 'offline' }, 503)
-        if (method === 'PATCH') return json({ id: user })
-        return json(profile)
+        if (method === 'PATCH') {
+            if (profile[0]) profile[0].welcome_sent = true
+            return json({ id: user })
+        }
+        return json(profile[0] || null)
     }
     if (u.hostname === 'api.resend.com' && u.pathname === '/emails') {
         if (resendDown) throw new Error('network down')
@@ -76,9 +80,9 @@ async function call(handler, body = {}, headers = { authorization: 'Bearer test-
     return { status, payload }
 }
 
-test('welcome email is sent once and marked in the profile', async () => {
+test('welcome email is sent right after signup for a fresh profile', async () => {
     reset()
-    const r = await call(welcome)
+    const r = await call(welcome, { email: 'mario@example.test' })
     assert.equal(r.status, 200)
     assert.equal(r.payload.success, true)
     assert.equal(sent.length, 1)
@@ -89,18 +93,25 @@ test('welcome email is sent once and marked in the profile', async () => {
 
 test('welcome email is skipped when already sent', async () => {
     reset()
-    profile.welcome_sent = true
-    const r = await call(welcome)
+    profile[0].welcome_sent = true
+    const r = await call(welcome, { email: 'mario@example.test' })
     assert.equal(r.status, 200)
     assert.equal(r.payload.skipped, true)
     assert.equal(sent.length, 0)
 })
 
-test('welcome email requires authentication', async () => {
+test('welcome email is skipped for old profiles (anti-spam)', async () => {
     reset()
-    assert.equal((await call(welcome, {}, {})).status, 401)
-    invalidToken = true
-    assert.equal((await call(welcome)).status, 401)
+    profile[0].created_at = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const r = await call(welcome, { email: 'mario@example.test' })
+    assert.equal(r.status, 200)
+    assert.equal(r.payload.skipped, true)
+    assert.equal(sent.length, 0)
+})
+
+test('welcome email validates the address and needs no session', async () => {
+    reset()
+    assert.equal((await call(welcome, { email: 'not-an-email' })).status, 400)
 })
 
 test('password reset returns generic success and emails a branded link', async () => {
@@ -129,7 +140,7 @@ test('password reset validates the email format', async () => {
 test('email delivery failure is reported without leaking provider details', async () => {
     reset()
     resendDown = true
-    const r = await call(welcome)
+    const r = await call(welcome, { email: 'mario@example.test' })
     assert.equal(r.status, 500)
     assert.doesNotMatch(JSON.stringify(r.payload), /network down/)
 })

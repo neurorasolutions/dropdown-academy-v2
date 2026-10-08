@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { ApiError, authenticate } from '../server/payment.js'
+import { ApiError, database, input } from '../server/payment.js'
 import { sendEmail, welcomeTemplate, emailConfigured } from '../server/email.js'
+
+const FRESH_WINDOW_MS = 30 * 60 * 1000
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Cache-Control', 'no-store')
@@ -9,20 +11,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Metodo non consentito.' })
     }
     try {
-        const { db, user } = await authenticate(req)
+        const email = input(req.body?.email, 'Email', /^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+        if (!emailConfigured()) return res.status(200).json({ success: true, skipped: true })
+        const db = database()
+
         const { data: profile, error } = await db
             .from('dropdown_profiles')
-            .select('full_name,welcome_sent')
-            .eq('id', user.id)
+            .select('id,full_name,welcome_sent,created_at')
+            .eq('email', email.trim().toLowerCase())
             .maybeSingle()
-        if (error) throw new ApiError(503, 'Profilo temporaneamente non disponibile.')
+        if (error) throw new ApiError(503, 'Invio email temporaneamente non disponibile.')
         if (!profile || profile.welcome_sent) return res.status(200).json({ success: true, skipped: true })
-        if (!emailConfigured()) return res.status(200).json({ success: false, skipped: true })
+        if (Date.now() - new Date(profile.created_at).getTime() > FRESH_WINDOW_MS)
+            return res.status(200).json({ success: true, skipped: true })
 
         const { subject, html } = welcomeTemplate(profile.full_name || '')
-        await sendEmail(user.email || '', subject, html)
-
-        await db.from('dropdown_profiles').update({ welcome_sent: true }).eq('id', user.id)
+        await sendEmail(email, subject, html)
+        await db.from('dropdown_profiles').update({ welcome_sent: true }).eq('id', profile.id)
         return res.status(200).json({ success: true })
     } catch (error) {
         return res

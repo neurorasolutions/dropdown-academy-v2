@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { GoogleButton } from '@/components/common/GoogleButton'
+import { sendWelcomeEmail } from '@/lib/notifications'
 
 const registerSchema = z.object({
     fullName: z.string().min(2, 'Inserisci il tuo nome completo'),
@@ -62,6 +63,7 @@ export default function Register() {
                         : 'Errore durante la registrazione. Riprova.'
             )
         } else {
+            void sendWelcomeEmail(data.email)
             setSuccess(true)
         }
     }
