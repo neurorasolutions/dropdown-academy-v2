@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { ApiError, authenticate, input, paypal, paypalToken, matchesOrder } from '../server/payment'
+import { ApiError, authenticate, input, paypal, paypalToken, matchesOrder } from '../server/payment.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Cache-Control', 'no-store')
     if (req.method !== 'POST') {
