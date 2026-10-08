@@ -1,3 +1,4 @@
+import { Metadata } from '@/components/common/Metadata'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, BookOpen, ShoppingBag, Download, Mail, ArrowLeft } from 'lucide-react'
 
@@ -14,9 +15,13 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-[calc(100dvh-5rem)] bg-ivory-50">
+            <Metadata />
             <div className="container-site py-8 lg:py-12">
                 <div className="mb-8">
-                    <NavLink to="/" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-wine-700 transition-colors mb-2">
+                    <NavLink
+                        to="/"
+                        className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-wine-700 transition-colors mb-2"
+                    >
                         <ArrowLeft className="w-4 h-4" aria-hidden />
                         Torna al sito
                     </NavLink>

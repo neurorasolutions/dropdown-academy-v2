@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 
 const loginSchema = z.object({
@@ -22,10 +23,13 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false)
     const [formError, setFormError] = useState<string | null>(null)
 
-    const from = (location.state as { from?: string })?.from || '/dashboard'
+    const requested = new URLSearchParams(location.search).get('redirect') || (location.state as { from?: string })?.from || '/dashboard'
+    const from = /^\/(?![\\/])/.test(requested) ? requested : '/dashboard'
+    const [resetMessage,setResetMessage]=useState('')
 
     const {
         register,
+        getValues,
         handleSubmit,
         formState: { errors },
     } = useForm<LoginForm>({
@@ -53,6 +57,14 @@ export default function Login() {
         }
     }
 
+    async function resetPassword() {
+        const email=getValues('email')
+        if(!z.string().email().safeParse(email).success){setResetMessage('Inserisci prima la tua email.');return}
+        setIsLoading(true)
+        try {const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${window.location.origin}/reset-password`});if(error)throw error;setResetMessage('Se l’indirizzo è registrato, riceverai un link per reimpostare la password.')}
+        catch {setResetMessage('Invio non riuscito. Riprova più tardi.')}
+        finally {setIsLoading(false)}
+    }
     return (
         <div className="container-site py-16 lg:py-24">
             <div className="max-w-md mx-auto">
@@ -138,10 +150,12 @@ export default function Login() {
 
                     <p className="text-center text-sm text-ink-500">
                         Non hai un account?{' '}
-                        <Link to="/register" className="text-wine-700 font-medium underline underline-offset-2 hover:no-underline">
+                        <Link to={`/register?redirect=${encodeURIComponent(from)}`} className="text-wine-700 font-medium underline underline-offset-2 hover:no-underline">
                             Registrati
                         </Link>
                     </p>
+                    <button type="button" className="text-sm text-wine-700 underline" disabled={isLoading} onClick={resetPassword}>Password dimenticata?</button>
+                    <p role="status" className="text-sm">{resetMessage}</p>
                 </motion.form>
             </div>
         </div>

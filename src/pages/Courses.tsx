@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Search, LayoutGrid, List } from 'lucide-react'
-import { supabase, isDemoMode } from '@/lib/supabase'
-import { coursesData } from '@/data/courses'
+import { getCatalog } from '@/lib/catalog'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { DataState } from '@/components/common/DataState'
 
 interface CourseCard {
     slug: string
@@ -17,18 +18,6 @@ interface CourseCard {
     duration: string
 }
 
-const staticCourses: CourseCard[] = Object.values(coursesData).map((c) => ({
-    slug: c.slug,
-    title: c.title,
-    description: c.description,
-    price: c.price,
-    thumbnail: c.thumbnail,
-    category: c.category,
-    level: c.level,
-    lessonsCount: c.lessonsCount,
-    duration: c.duration,
-}))
-
 const categories = [
     { value: 'all', label: 'Tutti' },
     { value: 'modulare', label: 'Sintesi Modulare' },
@@ -36,6 +25,7 @@ const categories = [
     { value: 'serum', label: 'Serum' },
     { value: 'max-msp', label: 'Max/MSP' },
     { value: 'pigments', label: 'Pigments' },
+    { value: 'altro', label: 'Altri corsi' },
 ]
 
 const levelLabels: Record<string, string> = {
@@ -45,53 +35,21 @@ const levelLabels: Record<string, string> = {
 }
 
 export default function Courses() {
-    const [courses, setCourses] = useState<CourseCard[]>(staticCourses)
+    const {data,loading,error,reload} = useAsyncData(getCatalog)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('all')
     const [selectedLevel, setSelectedLevel] = useState('all')
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-    useEffect(() => {
-        async function fetchCourses() {
-            if (isDemoMode) return
-            try {
-                const { data, error } = await (supabase.from('dropdown_courses') as any)
-                    .select('*')
-                    .eq('is_published', true)
-
-                if (data && !error && data.length > 0) {
-                    const mapped: CourseCard[] = data.map((dbCourse: any) => {
-                        const staticCourse = coursesData[dbCourse.slug]
-                        return {
-                            slug: dbCourse.slug,
-                            title: dbCourse.title,
-                            description: dbCourse.description,
-                            price: dbCourse.price,
-                            thumbnail: dbCourse.thumbnail_url || staticCourse?.thumbnail || '',
-                            category: dbCourse.category,
-                            level: dbCourse.level,
-                            lessonsCount: staticCourse?.lessonsCount || 0,
-                            duration: staticCourse?.duration || '—',
-                        }
-                    })
-                    setCourses(mapped)
-                }
-            } catch (err) {
-                console.error('Error fetching courses from Supabase:', err)
-            }
-        }
-        fetchCourses()
-    }, [])
-
     const filtered = useMemo(() => {
-        return courses.filter((course) => {
+        return (data||[]).filter((course) => {
             const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 course.description.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory
             const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel
             return matchesSearch && matchesCategory && matchesLevel
         })
-    }, [courses, searchQuery, selectedCategory, selectedLevel])
+    }, [data, searchQuery, selectedCategory, selectedLevel])
 
     return (
         <div className="container-site py-12 lg:py-20">
@@ -195,7 +153,8 @@ export default function Courses() {
             </div>
 
             {/* Griglia / lista */}
-            {filtered.length === 0 ? (
+            <DataState loading={loading} error={error} retry={reload}/>
+            {loading || error ? null : filtered.length === 0 ? (
                 <div className="text-center py-20">
                     <p className="text-ink-500">Nessun corso trovato. Prova a modificare i filtri.</p>
                 </div>

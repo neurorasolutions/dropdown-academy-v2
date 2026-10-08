@@ -24,88 +24,20 @@ export async function getPurchasedCourseSlugs(userId: string): Promise<string[]>
         }
     }
 
-    try {
-        const { data, error } = await (supabase
-            .from('dropdown_purchases') as any)
-            .select(`
-                course_id,
-                dropdown_courses (
-                    slug
-                )
-            `)
-            .eq('user_id', userId)
-            .eq('status', 'completed')
-
-        if (error) {
-            console.error('Error fetching Supabase purchases:', error)
-            return []
-        }
-
-        if (!data) return []
-
-        // Extract slugs from joined course table
-        return data
-            .map((item: any) => item.dropdown_courses?.slug)
-            .filter((slug: any): slug is string => typeof slug === 'string')
-    } catch (e) {
-        console.error('Exception fetching purchases:', e)
-        return []
-    }
-}
-
-/**
- * Records a successful purchase of a course.
- */
-export async function recordPurchase(
-    userId: string,
-    courseSlug: string,
-    amount: number,
-    paypalOrderId: string
-): Promise<boolean> {
-    if (isDemoMode) {
-        const key = DEMO_PURCHASES_KEY(userId)
-        const slugs = await getPurchasedCourseSlugs(userId)
-        if (!slugs.includes(courseSlug)) {
-            slugs.push(courseSlug)
-            localStorage.setItem(key, JSON.stringify(slugs))
-        }
-        return true
-    }
-
-    try {
-        // Find course ID by slug first
-        const { data: course, error: courseError } = await (supabase
-            .from('dropdown_courses') as any)
-            .select('id')
-            .eq('slug', courseSlug)
-            .single()
-
-        if (courseError || !course) {
-            console.error('Could not find course in database for slug:', courseSlug, courseError)
-            return false
-        }
-
-        const { error: insertError } = await (supabase
-            .from('dropdown_purchases') as any)
-            .insert({
-                user_id: userId,
-                course_id: course.id,
-                paypal_order_id: paypalOrderId,
-                amount_paid: amount,
-                status: 'completed',
-                payment_date: new Date().toISOString()
-            })
-
-        if (insertError) {
-            console.error('Error inserting purchase record into Supabase:', insertError)
-            return false
-        }
-
-        return true
-    } catch (e) {
-        console.error('Exception recording purchase:', e)
-        return false
-    }
+    const { data: purchases, error } = await supabase
+        .from('dropdown_purchases')
+        .select('course_id')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+    if (error) throw error
+    const ids = [...new Set((purchases || []).map((p) => p.course_id))]
+    if (!ids.length) return []
+    const { data: courses, error: courseError } = await supabase
+        .from('dropdown_courses')
+        .select('slug')
+        .in('id', ids)
+    if (courseError) throw courseError
+    return (courses || []).map((c) => c.slug)
 }
 
 /**
@@ -125,21 +57,21 @@ export async function getCompletedLessons(userId: string, courseSlug: string): P
 
     try {
         // Query completed lessons for this user
-        const { data, error } = await (supabase
-            .from('dropdown_user_progress') as any)
+        const { data, error } = await supabase
+            .from('dropdown_user_progress')
             .select('lesson_id')
             .eq('user_id', userId)
             .eq('completed', true)
 
         if (error) {
             console.error('Error fetching Supabase lesson progress:', error)
-            return []
+            throw error
         }
 
-        return data ? data.map((item: any) => item.lesson_id) : []
+        return data ? data.map((item) => item.lesson_id) : []
     } catch (e) {
         console.error('Exception fetching lesson progress:', e)
-        return []
+        throw e
     }
 }
 
@@ -150,7 +82,7 @@ export async function toggleLessonCompletion(
     userId: string,
     courseSlug: string,
     lessonId: string,
-    completed: boolean
+    completed: boolean,
 ): Promise<boolean> {
     if (isDemoMode) {
         const key = DEMO_PROGRESS_KEY(userId, courseSlug)
@@ -160,7 +92,7 @@ export async function toggleLessonCompletion(
                 completedIds.push(lessonId)
             }
         } else {
-            completedIds = completedIds.filter(id => id !== lessonId)
+            completedIds = completedIds.filter((id) => id !== lessonId)
         }
         localStorage.setItem(key, JSON.stringify(completedIds))
         return true
@@ -168,18 +100,19 @@ export async function toggleLessonCompletion(
 
     try {
         const timestamp = new Date().toISOString()
-        const { error } = await (supabase
-            .from('dropdown_user_progress') as any)
-            .upsert({
+        const { error } = await supabase.from('dropdown_user_progress').upsert(
+            {
                 user_id: userId,
                 lesson_id: lessonId,
                 completed,
                 last_position: 0,
                 completed_at: completed ? timestamp : null,
-                updated_at: timestamp
-            }, {
-                onConflict: 'user_id,lesson_id'
-            })
+                updated_at: timestamp,
+            },
+            {
+                onConflict: 'user_id,lesson_id',
+            },
+        )
 
         if (error) {
             console.error('Error updating lesson completion in Supabase:', error)

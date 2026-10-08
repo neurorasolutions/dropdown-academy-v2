@@ -28,5 +28,3 @@ export function ConditionalPayPalProvider({ children }: { children: ReactNode })
     // richiamo al consenso (gestito dal componente checkout).
     return <>{children}</>
 }
-
-export { paypalOptions }

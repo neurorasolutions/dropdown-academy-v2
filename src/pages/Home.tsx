@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Infinity as InfinityIcon, MessageCircle, Award, PlayCircle, ExternalLink } from 'lucide-react'
 import { useRef } from 'react'
-import { coursesData } from '@/data/courses'
+import { getCatalog } from '@/lib/catalog'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { DataState } from '@/components/common/DataState'
 
-const featuredCourses = Object.values(coursesData).slice(0, 3)
+
 
 const testimonials = [
     {
@@ -65,6 +67,8 @@ const fadeUp = {
 }
 
 export default function Home() {
+    const {data,loading,error,reload}=useAsyncData(getCatalog)
+    const featuredCourses=(data||[]).slice(0,3)
     const heroRef = useRef<HTMLDivElement>(null)
 
     return (
@@ -81,52 +85,68 @@ export default function Home() {
                     aria-hidden
                 />
                 <div className="container-site relative py-24 lg:py-36">
-                    <div className="max-w-3xl">
-                        <motion.p
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="eyebrow text-brass-400 mb-6"
-                        >
-                            Sound Design · Produzione Musicale
-                        </motion.p>
-                        <motion.h1
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.55, delay: 0.1 }}
-                            className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] font-medium"
-                        >
-                            Il suono che hai in testa,
-                            <br />
-                            <span className="italic text-brass-300">impari a costruirlo.</span>
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.55, delay: 0.2 }}
-                            className="mt-6 text-lg text-ivory-200/80 leading-relaxed max-w-xl"
-                        >
-                            Corsi online e masterclass in presenza per chi vuole padroneggiare
-                            la sintesi, il mixaggio e la produzione — con metodo, profondità
-                            e senza scorciatoie.
-                        </motion.p>
-                        <motion.div
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.55, delay: 0.3 }}
-                            className="mt-10 flex flex-wrap gap-4"
-                        >
-                            <Link to="/courses" className="btn-primary bg-brass-400 text-wine-950 hover:bg-brass-300">
-                                Scopri i corsi
-                                <ArrowRight className="w-4 h-4" aria-hidden />
-                            </Link>
-                            <Link
-                                to="/in-presenza"
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-ivory-200/30 text-ivory-50 font-medium transition-all duration-200 hover:border-ivory-200/60 hover:bg-ivory-50/5 cursor-pointer"
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-16">
+                        <div className="flex-1 max-w-3xl">
+                            <motion.p
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className="eyebrow text-brass-400 mb-6"
                             >
-                                <PlayCircle className="w-4 h-4" aria-hidden />
-                                Formazione in presenza
-                            </Link>
+                                Sound Design · Produzione Musicale
+                            </motion.p>
+                            <motion.h1
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.55, delay: 0.1 }}
+                                className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] font-medium"
+                            >
+                                Il suono che hai in testa,
+                                <br />
+                                <span className="italic text-brass-300">impari a costruirlo.</span>
+                            </motion.h1>
+                            <motion.p
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.55, delay: 0.2 }}
+                                className="mt-6 text-lg text-ivory-200/80 leading-relaxed max-w-xl"
+                            >
+                                Corsi online e masterclass in presenza per chi vuole padroneggiare
+                                la sintesi, il mixaggio e la produzione — con metodo, profondità
+                                e senza scorciatoie.
+                            </motion.p>
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.55, delay: 0.3 }}
+                                className="mt-10 flex flex-wrap gap-4"
+                            >
+                                <Link to="/courses" className="btn-primary bg-brass-400 text-wine-950 hover:bg-brass-300">
+                                    Scopri i corsi
+                                    <ArrowRight className="w-4 h-4" aria-hidden />
+                                </Link>
+                                <Link
+                                    to="/in-presenza"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-ivory-200/30 text-ivory-50 font-medium transition-all duration-200 hover:border-ivory-200/60 hover:bg-ivory-50/5 cursor-pointer"
+                                >
+                                    <PlayCircle className="w-4 h-4" aria-hidden />
+                                    Formazione in presenza
+                                </Link>
+                            </motion.div>
+                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.6, delay: 0.25, ease: 'easeOut' }}
+                            className="shrink-0 mx-auto lg:mx-0 w-48 sm:w-56 lg:w-64 xl:w-72"
+                        >
+                            <img
+                                src="/logo-transparent.png"
+                                alt="Logo Dropdown Academy"
+                                className="w-full h-auto"
+                                width={500}
+                                height={500}
+                            />
                         </motion.div>
                     </div>
                 </div>
@@ -137,9 +157,9 @@ export default function Home() {
                 <div className="container-site py-12">
                     <dl className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
                         {[
-                            { value: '6+', label: 'Corsi completi' },
-                            { value: '150+', label: 'Lezioni video' },
-                            { value: '60h+', label: 'Didattica' },
+                            { value: String(data?.length || '—'), label: 'Corsi disponibili' },
+                            { value: data ? String(data.reduce((n,c)=>n+c.lessonsCount,0)) : '—', label: 'Lezioni nel programma' },
+                            { value: 'Lifetime', label: 'Accesso ai corsi' },
                             { value: '9', label: 'Moduli in presenza' },
                         ].map((stat) => (
                             <div key={stat.label}>
@@ -170,7 +190,7 @@ export default function Home() {
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {featuredCourses.map((course, i) => (
+                    <DataState loading={loading} error={error} retry={reload}/>{featuredCourses.map((course, i) => (
                         <motion.div
                             key={course.slug}
                             {...fadeUp}
@@ -272,7 +292,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {testimonials.map((t, i) => (
                             <motion.figure
-                                key={t.name}
+                                key={`${t.name}-${t.content}`}
                                 {...fadeUp}
                                 transition={{ ...fadeUp.transition, delay: (i % 3) * 0.08 }}
                                 className="card p-6"

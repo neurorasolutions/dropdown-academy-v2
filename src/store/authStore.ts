@@ -10,12 +10,13 @@ interface AuthState {
     session: Session | null
     isLoading: boolean
     isInitialized: boolean
+    isInitializing: boolean
 
     initialize: () => Promise<void>
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
     signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
-    updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
+    updateProfile: (updates: Pick<Partial<Profile>, 'full_name' | 'avatar_url'>) => Promise<{ error: Error | null }>
 }
 
 const demoUser: User = {
@@ -44,9 +45,11 @@ export const useAuthStore = create<AuthState>()(
             session: null,
             isLoading: true,
             isInitialized: false,
+            isInitializing: false,
 
             initialize: async () => {
-                if (get().isInitialized) return
+                if (get().isInitialized || get().isInitializing) return
+                set({isInitializing:true})
 
                 try {
                     if (isDemoMode) {
@@ -55,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
                             profile: demoProfile,
                             session: null,
                             isLoading: false,
-                            isInitialized: true,
+                            isInitialized: true, isInitializing: false,
                         })
                         return
                     }
@@ -74,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
                             profile: profile ?? null,
                             session,
                             isLoading: false,
-                            isInitialized: true,
+                            isInitialized: true, isInitializing: false,
                         })
                     } else {
                         set({
@@ -82,26 +85,25 @@ export const useAuthStore = create<AuthState>()(
                             profile: null,
                             session: null,
                             isLoading: false,
-                            isInitialized: true,
+                            isInitialized: true, isInitializing: false,
                         })
                     }
 
-                    supabase.auth.onAuthStateChange(async (event, session) => {
-                        if (event === 'SIGNED_IN' && session?.user) {
-                            const { data: profile } = await supabase
-                                .from('dropdown_profiles')
-                                .select('*')
-                                .eq('id', session.user.id)
-                                .single()
-
-                            set({ user: session.user, profile: profile ?? null, session })
-                        } else if (event === 'SIGNED_OUT') {
-                            set({ user: null, profile: null, session: null })
+                    supabase.auth.onAuthStateChange((_event, session) => {
+                        set({user:session?.user||null,session,profile:null})
+                        if(session?.user) {
+                            // Leave the auth callback before querying Supabase to avoid a session lock.
+                            setTimeout(() => {
+                                void supabase.from('dropdown_profiles').select('*').eq('id',session.user.id).single()
+                                    .then(({data:profile}) => {
+                                        if(get().user?.id===session.user.id)set({profile:profile||null})
+                                    })
+                            },0)
                         }
                     })
                 } catch (error) {
                     console.error('Auth initialization error:', error)
-                    set({ isLoading: false, isInitialized: true })
+                    set({ isLoading: false, isInitialized: true, isInitializing: false })
                 }
             },
 
@@ -164,6 +166,7 @@ export const useAuthStore = create<AuthState>()(
                         email,
                         password,
                         options: {
+                            emailRedirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(new URLSearchParams(window.location.search).get('redirect') || '/dashboard')}`,
                             data: { full_name: fullName },
                         },
                     })
@@ -205,9 +208,8 @@ export const useAuthStore = create<AuthState>()(
                 }
 
                 try {
-                    const { error } = await (supabase
-                        .from('dropdown_profiles') as any)
-                        .update(updates)
+                    const { error } = await supabase.from('dropdown_profiles')
+                        .update({full_name:updates.full_name,avatar_url:updates.avatar_url})
                         .eq('id', user.id)
 
                     if (error) throw error

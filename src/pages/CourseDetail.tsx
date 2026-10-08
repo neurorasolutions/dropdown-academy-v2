@@ -1,36 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PayPalScriptProvider } from '@paypal/react-paypal-js'
 import { motion } from 'framer-motion'
 import { Check, Clock, Layers, PlayCircle, ShieldCheck } from 'lucide-react'
-import { coursesData } from '@/data/courses'
+import { getCourse } from '@/lib/catalog'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { DataState } from '@/components/common/DataState'
 import { useAuthStore } from '@/store/authStore'
 import { getPurchasedCourseSlugs } from '@/lib/purchases'
-import { supabase, isDemoMode } from '@/lib/supabase'
 import { PayPalCheckout } from '@/components/PayPalCheckout'
-import { recordPurchase } from '@/lib/purchases'
 import { useCookieStore } from '@/store/cookieStore'
-
-interface ModuleData {
-    id: string
-    title: string
-    lessons: { id: string; title: string; duration: string; isFree: boolean }[]
-}
-
-interface CourseFull {
-    slug: string
-    title: string
-    description: string
-    longDescription: string
-    price: number
-    thumbnail: string
-    lessonsCount: number
-    duration: string
-    features: string[]
-    modules: ModuleData[]
-    level: string
-    category: string
-}
 
 const levelLabels: Record<string, string> = {
     beginner: 'Principiante',
@@ -41,74 +20,20 @@ const levelLabels: Record<string, string> = {
 export default function CourseDetail() {
     const { slug } = useParams()
     const { user } = useAuthStore()
-    const [course, setCourse] = useState<CourseFull | null>(
-        slug ? (coursesData[slug] as unknown as CourseFull) ?? null : null
-    )
-    const [isLoadingAccess, setIsLoadingAccess] = useState(true)
-    const [isPurchased, setIsPurchased] = useState(false)
-
+    const loader = useCallback(() => getCourse(slug || ''), [slug])
+    const {data:course,loading,error,reload}=useAsyncData(loader)
+    const [isLoadingAccess,setIsLoadingAccess]=useState(true)
+    const [isPurchased,setIsPurchased]=useState(false)
     useEffect(() => {
-        async function loadCourseAndAccess() {
-            if (slug && !isDemoMode) {
-                try {
-                    const { data, error } = await (supabase.from('dropdown_courses') as any)
-                        .select('*, dropdown_course_modules(*, dropdown_lessons(*))')
-                        .eq('slug', slug)
-                        .single()
-
-                    if (data && !error) {
-                        const sortedModules = (data.dropdown_course_modules || [])
-                            .map((m: any) => ({
-                                id: m.id,
-                                title: m.title,
-                                lessons: (m.dropdown_lessons || [])
-                                    .map((l: any) => ({
-                                        id: l.id,
-                                        title: l.title,
-                                        duration: l.video_duration
-                                            ? `${Math.floor(l.video_duration / 60)}:${String(Math.floor(l.video_duration % 60)).padStart(2, '0')}`
-                                            : '0:00',
-                                        isFree: l.is_free,
-                                    }))
-                                    .sort((a: any, b: any) => a.order_index - b.order_index),
-                            }))
-                            .sort((a: any, b: any) => a.order_index - b.order_index)
-
-                        setCourse({
-                            slug: data.slug,
-                            title: data.title,
-                            description: data.description,
-                            longDescription: staticCourseLong(data.slug) || data.description,
-                            price: Number(data.price),
-                            thumbnail: data.thumbnail_url || coursesData[data.slug]?.thumbnail || '',
-                            lessonsCount: (data.dropdown_course_modules || []).reduce(
-                                (acc: number, m: any) => acc + (m.dropdown_lessons?.length || 0), 0
-                            ) || coursesData[data.slug]?.lessonsCount || 0,
-                            duration: coursesData[data.slug]?.duration || '—',
-                            features: coursesData[data.slug]?.features || [],
-                            modules: sortedModules,
-                            level: data.level,
-                            category: data.category,
-                        })
-                    }
-                } catch (err) {
-                    console.error('Error fetching course:', err)
-                }
-            }
-
-            if (user && slug) {
-                try {
-                    const purchasedSlugs = await getPurchasedCourseSlugs(user.id)
-                    setIsPurchased(purchasedSlugs.includes(slug))
-                } catch (e) {
-                    console.error('Error checking course access:', e)
-                }
-            }
-            setIsLoadingAccess(false)
-        }
-        loadCourseAndAccess()
-    }, [user, slug])
-
+        let active=true
+        setIsPurchased(false); setIsLoadingAccess(true)
+        if(!user||!slug){setIsLoadingAccess(false);return}
+        getPurchasedCourseSlugs(user.id).then(slugs=>{if(active)setIsPurchased(slugs.includes(slug))})
+            .catch(()=>{}).finally(()=>{if(active)setIsLoadingAccess(false)})
+        return ()=>{active=false}
+    },[user,slug])
+    useEffect(()=>{if(course)document.title=`${course.title} | Dropdown Academy`},[course])
+    if(loading||error)return <div className="container-site py-12"><DataState loading={loading} error={error} retry={reload}/></div>
     if (!course) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -290,11 +215,7 @@ export default function CourseDetail() {
                                 slug={course.slug}
                                 courseTitle={course.title}
                                 price={course.price}
-                                userId={user.id}
-                                onPurchased={async (transactionId) => {
-                                    await recordPurchase(user.id, course.slug, course.price, transactionId)
-                                    setIsPurchased(true)
-                                }}
+                                                                onPurchased={() => setIsPurchased(true)}
                             />
                         ) : (
                             <div className="space-y-3">
@@ -312,7 +233,7 @@ export default function CourseDetail() {
 
                         {freeLessons > 0 && !isPurchased && (
                             <p className="mt-4 text-center text-xs text-ink-400">
-                                {freeLessons} lezion{freeLessons === 1 ? 'e gratuita' : 'i gratuite'} in anteprima
+                                <Link to={`/courses/${slug}/player`} className="text-wine-700 underline">Guarda le anteprime gratuite ({freeLessons})</Link>
                             </p>
                         )}
                     </div>
@@ -322,22 +243,15 @@ export default function CourseDetail() {
     )
 }
 
-function staticCourseLong(slug: string): string | null {
-    const c = (coursesData as Record<string, { longDescription?: string }>)[slug]
-    return c?.longDescription || null
-}
-
 function CheckoutBox({
     slug,
     courseTitle,
     price,
-    userId,
     onPurchased,
 }: {
     slug: string
     courseTitle: string
     price: number
-    userId: string
     onPurchased: (transactionId: string) => void | Promise<void>
 }) {
     const { consent, openPreferences } = useCookieStore()
@@ -369,7 +283,6 @@ function CheckoutBox({
                 courseSlug={slug}
                 courseTitle={courseTitle}
                 price={price}
-                userId={userId}
                 onSuccess={async (transactionId) => {
                     await onPurchased(transactionId)
                 }}

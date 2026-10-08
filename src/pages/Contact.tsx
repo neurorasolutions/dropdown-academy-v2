@@ -7,10 +7,10 @@ import { Mail, MapPin, Clock, Loader2, Send, CheckCircle2 } from 'lucide-react'
 import { supabase, isDemoMode } from '@/lib/supabase'
 
 const contactSchema = z.object({
-    name: z.string().min(2, 'Inserisci il tuo nome'),
-    email: z.string().email('Email non valida'),
-    subject: z.string().min(3, 'Inserisci un oggetto'),
-    message: z.string().min(10, 'Il messaggio deve avere almeno 10 caratteri'),
+    name: z.string().min(2, 'Inserisci il tuo nome').max(120),
+    email: z.string().email('Email non valida').max(254),
+    subject: z.string().min(3, 'Inserisci un oggetto').max(200),
+    message: z.string().min(10, 'Il messaggio deve avere almeno 10 caratteri').max(10000),
 })
 
 type ContactForm = z.infer<typeof contactSchema>
@@ -41,7 +41,7 @@ export default function Contact() {
 
         try {
             if (!isDemoMode) {
-                const { error } = await (supabase.from('dropdown_contact_messages') as any).insert({
+                const { error } = await supabase.from('dropdown_contact_messages').insert({
                     name: data.name,
                     email: data.email,
                     subject: data.subject,

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BookOpen, PlayCircle, Download as DownloadIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import { getPurchasedCourseSlugs } from '@/lib/purchases'
-import { coursesData } from '@/data/courses'
+import { getPurchasedCourseSlugs, getCompletedLessons } from '@/lib/purchases'
+import { getCourse } from '@/lib/catalog'
 
 interface PurchasedCourse {
     slug: string
@@ -19,26 +19,25 @@ export default function Dashboard() {
     const { user, profile } = useAuthStore()
     const [courses, setCourses] = useState<PurchasedCourse[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [loadError,setLoadError]=useState('')
 
     useEffect(() => {
         async function loadCourses() {
             if (!user) return
             try {
                 const slugs = await getPurchasedCourseSlugs(user.id)
-                const purchased: PurchasedCourse[] = slugs
-                    .map((slug) => coursesData[slug])
-                    .filter(Boolean)
-                    .map((c) => ({
-                        slug: c.slug,
-                        title: c.title,
-                        thumbnail: c.thumbnail,
-                        lessonsCount: c.lessonsCount,
-                        duration: c.duration,
-                        progress: 0,
-                    }))
+                const results = await Promise.all(slugs.map(async slug => {
+                    const [c,done]=await Promise.all([getCourse(slug),getCompletedLessons(user.id,slug)])
+                    if(!c)return null
+                    const lessons=c.modules.flatMap(m=>m.lessons)
+                    return {slug:c.slug,title:c.title,thumbnail:c.thumbnail,lessonsCount:lessons.length,duration:c.duration,
+                        progress:lessons.length?Math.round(100*lessons.filter(l=>done.includes(l.id)).length/lessons.length):0}
+                }))
+                const purchased=results.filter((c):c is PurchasedCourse=>c!==null)
                 setCourses(purchased)
             } catch (e) {
                 console.error('Error loading dashboard courses:', e)
+                setLoadError('Impossibile caricare i tuoi corsi. Ricarica la pagina per riprovare.')
             } finally {
                 setIsLoading(false)
             }
@@ -61,7 +60,7 @@ export default function Dashboard() {
                 </h1>
             </motion.div>
 
-            {isLoading ? (
+            {loadError ? <p role="alert" className="card p-6">{loadError}</p> : isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[1, 2, 3].map((i) => (
                         <div key={i} className="card overflow-hidden">

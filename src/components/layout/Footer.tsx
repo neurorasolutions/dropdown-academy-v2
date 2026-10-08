@@ -8,6 +8,8 @@ const footerNav = {
         { label: 'Corsi Online', path: '/courses' },
         { label: 'In Presenza', path: '/in-presenza' },
         { label: 'Community', path: '/community' },
+        { label: 'Video gratuiti', path: '/free-videos' },
+        { label: 'Download gratuiti', path: '/downloads' },
         { label: 'FAQ', path: '/faq' },
         { label: 'Contatti', path: '/contact' },
     ],

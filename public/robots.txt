@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /certificate/
+Disallow: /reset-password
+Disallow: /api/
+Disallow: /courses/*/player
+Sitemap: https://www.dropdownacademy.com/sitemap.xml

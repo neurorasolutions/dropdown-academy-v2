@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { lazy, Suspense } from 'react'
-import { Loader2 } from 'lucide-react'
+import { PageLoader } from '@/components/common/PageLoader'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Courses = lazy(() => import('@/pages/Courses'))
@@ -25,17 +25,12 @@ const NotFound = lazy(() => import('@/pages/NotFound'))
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const AdminHome = lazy(() => import('@/pages/admin/AdminHome'))
 const AdminCourses = lazy(() => import('@/pages/admin/Courses'))
+const AdminCourseEditor = lazy(() => import('@/pages/admin/CourseEditor'))
+const Certificate = lazy(() => import('@/pages/Certificate'))
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 const AdminSales = lazy(() => import('@/pages/admin/Sales'))
 const AdminDownloads = lazy(() => import('@/pages/admin/Downloads'))
 const AdminMessages = lazy(() => import('@/pages/admin/Messages'))
-
-function PageLoader() {
-    return (
-        <div className="min-h-[60vh] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-wine-700 animate-spin" aria-label="Caricamento" />
-        </div>
-    )
-}
 
 function withSuspense(Component: React.LazyExoticComponent<() => JSX.Element>) {
     return (
@@ -63,6 +58,8 @@ const router = createBrowserRouter([
             { path: 'terms', element: withSuspense(Terms) },
             { path: 'cookies', element: withSuspense(Cookies) },
             { path: 'login', element: withSuspense(Login) },
+            { path: 'reset-password', element: withSuspense(ResetPassword) },
+            { path: 'certificate/:slug', element: <ProtectedRoute>{withSuspense(Certificate)}</ProtectedRoute> },
             { path: 'register', element: withSuspense(Register) },
             {
                 path: 'dashboard',
@@ -81,6 +78,7 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: withSuspense(AdminHome) },
             { path: 'courses', element: withSuspense(AdminCourses) },
+            { path: 'courses/:id', element: withSuspense(AdminCourseEditor) },
             { path: 'sales', element: withSuspense(AdminSales) },
             { path: 'downloads', element: withSuspense(AdminDownloads) },
             { path: 'messages', element: withSuspense(AdminMessages) },

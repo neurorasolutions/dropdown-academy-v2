@@ -1,88 +1,31 @@
-# Dropdown Academy v2 — Stato Progetto
+# Dropdown Academy — Stato aggiornato al 10 settembre 2026
 
-Ultimo aggiornamento: 3 settembre 2026, fine sessione.
+## Codice completato e verificato
 
-## AGGIORNAMENTO 3 SETTEMBRE — SITO IN PRODUZIONE
-- Flusso e-commerce COMPLETO verificato: registrazione → login → acquisto PayPal (sandbox) → registrazione acquisto server-side → accesso corso. Tutto funziona.
-- Bug risolti: relazione embed dropdown_courses in getPurchasedCourseSlugs (ultima pezza)
-- Debug rimosso (pannello checkout + api/debug-env.ts), eslint.config.js aggiunto (ESLint 9)
-- PayPal LIVE attivo: VITE_PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_MODE=live su Vercel (verificato: orderID reali)
-- ATTENZIONE nome variabile: VITE_PAYPAL_CLIENT_ID (non PAYPAL_CLIENT_ID) — l'utente l'aveva sbagliata
-- DOMINIO LIVE: https://www.dropdownacademy.com (DNS su Squarespace, ex Google Domains)
-  - Record: A @ 76.76.21.21 + CNAME www cname.vercel-dns.com (legacy ok; Vercel raccomanda 216.150.1.1 / e67830b761fa924d.vercel-dns-016.com opzionale)
-  - Vecchio sito Google Sites smontato (era ghs.googlehosted.com)
-  - VITE_APP_URL aggiornato a https://www.dropdownacademy.com
-  - Supabase Auth: Site URL https://www.dropdownacademy.com + Redirect URLs ** per entrambi i domini
-  - Attesa propagazione cache DNS (TTL 4h del vecchio record) il 3 set sera
-- Patreon integrato (4 set): pagina /community, sezione Home, banner cross-sell nel dettaglio corso, icona footer+header nav. Link: https://www.patreon.com/c/dropdown (€10/mese)
-- GDPR cookie banner completato e verificato e2e (PayPal SDK bloccato pre-consenso, consenso just-in-time al checkout)
-- RISPETTIVA: template email "Confirm signup" rebrandizzato (testo inviato all'utente; ATTN: template condiviso con FinFlow)
-- PENDING: test acquisto reale (Pigments 15€) + rimborso; area admin dati reali; attestati; sitemap; video lezioni (video_id vuota)
-- SQL pulizia eseguito: corso test-acquisto-010 eliminato + utenti diagnostico rimossi
+- Pannello amministrativo collegato a Supabase: panoramica, corsi, lezioni/video/materiali, vendite, download e messaggi.
+- Catalogo, home, progressi studenti e player collegati ai dati reali.
+- Recupero password e conservazione della destinazione del corso durante login/registrazione.
+- Attestato di completamento verificato dal database, stampabile e salvabile in PDF.
+- Sitemap dinamica, robots e metadati.
+- Pagamenti registrati soltanto dal server, con verifica di utente/corso/importo/valuta, prevenzione dei duplicati sullo stesso ordine e recupero dopo errore di salvataggio.
+- Migrazione SQL pronta per proteggere profili, acquisti, video e progressi; importazione pronta dei sette download esistenti.
 
-## Cosa è stato fatto
+## Verifiche eseguite
 
-### Progetto
-- **Nuovo sito** in `~/Documents/Neurora/CLIENTI/DROPDOWNACADEMY/DROPDOWN_Website_v2/` (refactor totale del vecchio `DROPDOWN_Website` che resta intatto come riferimento)
-- **GitHub**: https://github.com/neurorasolutions/dropdown-academy-v2 (branch main)
-- **Vercel**: deploy automatico da GitHub → https://dropdown-academy-v2.vercel.app — ONLINE e funzionante
-- **Design**: palette avorio/bordeaux/ottone, Playfair Display + Inter (niente più neon cyberpunk)
-- **Stack**: React 18 + TS + Vite + Tailwind + Supabase + PayPal + Vercel serverless
+- Build di produzione riuscita, inclusa la verifica TypeScript delle API.
+- Lint senza errori né avvisi.
+- 24 test automatici superati: PostgreSQL/RLS in ambiente isolato, PayPal simulato, normalizzazione video, catalogo e sitemap.
+- Browser sul catalogo Supabase reale: ricerca, layout telefono a 375px, dettaglio corso, menu mobile, modulo login e protezione dell'area admin.
+- Database online letto senza modifiche: sei corsi pubblicati, tabella download vuota.
 
-### Database (Supabase condiviso Neurora: acquvpgmitvkykdppbkv)
-- DB **condiviso tra progetti Neurora**: scelto PIANO B = tabelle in `public` con prefisso `dropdown_*`
-  (lo schema separato `dropdown` NON era esponibile via Data API — setting "Exposed schemas" del dashboard non applicava il salvataggio; lo schema `dropdown` esiste ma è INUTILIZZATO, si può cancellare)
-- 8 tabelle: dropdown_profiles, dropdown_courses, dropdown_course_modules, dropdown_lessons, dropdown_purchases, dropdown_user_progress, dropdown_free_downloads, dropdown_contact_messages
-- Trigger `dropdown_handle_new_user` su auth.users → crea profilo automaticamente (VERIFICATO funzionante)
-- RLS completa con policy per ruolo utente/admin
-- Seed caricato: **6 corsi, 14 moduli, 43 lezioni** (tutti pubblicati)
-- File SQL: `supabase_schema_dropdown.sql` + `supabase_seed_dropdown.sql` (in root progetto)
+## Da completare online
 
-### Credenziali
-- **Supabase** (utente account Neurora): URL https://acquvpgmitvkykdppbkv.supabase.co + anon key nel .env locale (NON nel repo)
-- **PayPal**: in Sandbox su Vercel. Client ID live + secret recuperati ma NON ancora impostati (quando si passa a live: sostituire VITE_PAYPAL_CLIENT_ID e PAYPAL_CLIENT_SECRET, PAYPAL_MODE=live su Vercel)
-- Account di test sandbox PayPal: usarne uno `@personal.example.com` dal developer dashboard (l'utente ha completato UN pagamento sandbox che però non è stato registrato — vedi issue sotto)
+Questa sessione ha aggiornato il codice locale; non ha pubblicato il sito né modificato il database di produzione.
 
-## ISSUE APERTA — Test acquisto non registra l'acquisto
+- Configurare la chiave server Supabase, assente nel `.env` locale.
+- Coordinare migrazione SQL e release su Vercel: la precedente registrazione acquisti dal browser non è compatibile con le nuove regole.
+- Importare i sette download con lo script fornito.
+- Applicare `sql/20260913_course_videos.sql`: collega i 12 video e le dispense PDF del corso Max/MSP e sostituisce i programmi dimostrativi di VCV Rack e Ableton con le 9 e 12 lezioni reali fornite. Le durate non esposte da Drive sono impostate a 60 minuti come valore da rivedere dopo l'anteprima dei video.
+- Test completo nell'ambiente sandbox configurato; eventuale acquisto reale e rimborso con il titolare dell'account.
 
-Sintomo: pagamento PayPal sandbox completato → messaggio verde "Pagamento completato" → ma `dropdown_purchases` resta VUOTA. Inoltre /player mostra "corso non acquistato".
-
-### Diagnosi già fatta
-- DB verificato OK: INSERT autenticato manuale funziona (testato con token reale, 201)
-- Le query embed PostgREST ora sono corrette (dropdown_course_modules, dropdown_courses...)
-- Errore console visto dall'utente: GET `dropdown_purchases?select=course_id,courses(slug)` → 400: ERA la vecchia relazione `courses(slug)` — FIXATO nel commit b878d9e
-- Soluzione implementata (commit b02adfd): registrazione acquisto SPOSTATA SERVER-SIDE in `api/capture-order.ts`:
-  - riceve orderID + courseSlug + userToken
-  - valida JWT utente, rilegge prezzo dal DB, verifica importo pagato = prezzo corso (anti-tampering)
-  - cattura pagamento PayPal e inserisce acquisto nella stessa chiamata
-  - se insert fallisce dopo capture OK: risponde comunque 200 con warning (transazione PayPal recuperabile)
-- API verificata funzionante: create-order → 200 con orderID; capture con ordine non pagato → errore atteso
-
-### PROSSIMI PASSI (riprendere da qui)
-1. Fare un test acquisto COMPLETO dal sito con hard refresh (Cmd+Shift+R) PRIMA di pagare:
-   l'ultimo tentativo dell'utente risulta senza acquisti nel DB — capire se aveva il JS vecchio
-   in cache o se il pagamento non è arrivato a COMPLETED
-2. Se l'acquisto viene registrato: pulizia → rimborso (sandbox non serve), cancellare corso di test
-   `test-acquisto-010` e l'utente diagnostico `test-diag2@dropdownacademy.com` (password Test1234!)
-3. Passare a PayPal LIVE (sostituire le due variabili su Vercel + PAYPAL_MODE=live)
-4. Da fare ancora:
-   - Dominio custom su Vercel + aggiornare VITE_APP_URL + Supabase Auth URL Configuration (Site URL + Redirect URLs)
-   - Area admin: pagine Vendite/Messaggi/Download sono placeholder → collegare a Supabase
-   - Attestato di completamento (promesso nella FAQ ma non implementato)
-   - Sitemap + robots.txt
-   - Migrare i video lezioni (column video_id vuota nel seed; vecchio player non li aveva)
-
-### Note tecniche
-- Il frontend usa l'utente `dv.pantaleo@gmail.com` come admin (is_admin=true, promosso via SQL)
-- Le query embed PostgREST usano i nomi di RELAZIONE: con le tabelle rinominate, gli embed sono
-  `dropdown_course_modules(*, dropdown_lessons(*))` e `dropdown_courses(slug)` — i nomi dentro select() devono coincidere col nome tabella
-- lib/purchases.ts ha fallback demo con localStorage se isDemoMode
-- Il vecchio `.env` del progetto v1 punta a demo.supabase.co (mai collegato davvero)
-
-## Comandi utili
-```bash
-cd ~/Documents/Neurora/CLIENTI/DROPDOWNACADEMY/DROPDOWN_Website_v2
-npm run dev        # sviluppo locale (http://localhost:5173)
-npm run build      # build produzione (verificata OK)
-git push           # → deploy automatico Vercel
-```
+Procedura, configurazione e limiti documentati in `README.md`. Nessuna password o chiave deve essere aggiunta a questo documento.

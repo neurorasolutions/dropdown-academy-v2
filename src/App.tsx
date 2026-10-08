@@ -3,7 +3,7 @@ import { router } from './router'
 import { useAuthStore } from '@/store/authStore'
 import { useEffect } from 'react'
 import { ToastContainer } from '@/components/common/ToastContainer'
-import { ConditionalPayPalProvider } from '@/components/common/ConditionalPayPalProvider'
+import { MotionConfig } from 'framer-motion'
 
 export default function App() {
     const initialize = useAuthStore((s) => s.initialize)
@@ -13,9 +13,9 @@ export default function App() {
     }, [initialize])
 
     return (
-        <ConditionalPayPalProvider>
+        <MotionConfig reducedMotion="user">
             <RouterProvider router={router} />
             <ToastContainer />
-        </ConditionalPayPalProvider>
+        </MotionConfig>
     )
 }

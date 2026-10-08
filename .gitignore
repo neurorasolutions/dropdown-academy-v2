@@ -4,3 +4,6 @@ dist-ssr
 *.local
 .DS_Store
 .env
+.cache/
+.env.*
+!.env.example

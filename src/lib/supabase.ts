@@ -20,4 +20,4 @@ export const supabase = createClient<Database>(
     }
 )
 
-export const isDemoMode = !supabaseUrl || supabaseUrl === 'https://demo.supabase.co'
+export const isDemoMode = !supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://demo.supabase.co'

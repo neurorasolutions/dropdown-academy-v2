@@ -1,8 +1,8 @@
+import { Metadata } from '@/components/common/Metadata'
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { ToastContainer } from '@/components/common/ToastContainer'
 import { CookieBanner } from '@/components/common/CookieBanner'
 
 export function MainLayout() {
@@ -20,12 +20,12 @@ export function MainLayout() {
             >
                 Salta al contenuto
             </a>
+            <Metadata />
             <Header />
             <main id="main" className="flex-1">
                 <Outlet />
             </main>
             <Footer />
-            <ToastContainer />
             <CookieBanner />
         </div>
     )

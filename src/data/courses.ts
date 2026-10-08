@@ -84,7 +84,7 @@ Cosa imparerai:
     'ableton-live-masterclass': {
         id: '2',
         slug: 'ableton-live-masterclass',
-        title: 'Ableton Live Masterclass',
+        title: 'Ableton Live',
         description: 'Corso completo passo dopo passo per dominare Ableton Live.',
         longDescription: `Questo corso completo ti guiderà passo dopo passo nell'utilizzo di tutte le funzionalità di Ableton Live. 
 

@@ -101,12 +101,12 @@ export default function FreeVideos() {
                                     <article className="card transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lift">
                                         <div className="aspect-video relative bg-ivory-200 overflow-hidden">
                                             <img
-                                                src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
+                                                src={`https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`}
                                                 alt={video.title}
                                                 loading="lazy"
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                 onError={(e) => {
-                                                    e.currentTarget.src = `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`
+                                                    e.currentTarget.src = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`
                                                 }}
                                                 width={640}
                                                 height={360}

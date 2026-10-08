@@ -31,7 +31,8 @@ export default function Register() {
     const [formError, setFormError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    const redirect = searchParams.get('redirect') || '/dashboard'
+    const requested = searchParams.get('redirect') || '/dashboard'
+    const redirect = /^\/(?![\\/])/.test(requested) ? requested : '/dashboard'
 
     const {
         register,
@@ -97,7 +98,7 @@ export default function Register() {
                                 Ti abbiamo inviato un'email di conferma. Clicca sul link per attivare
                                 l'account, poi accedi.
                             </p>
-                            <Link to="/login" className="btn-primary w-full">
+                            <Link to={`/login?redirect=${encodeURIComponent(redirect)}`} className="btn-primary w-full">
                                 Vai al login
                             </Link>
                         </div>
@@ -190,7 +191,7 @@ export default function Register() {
 
                             <p className="text-center text-sm text-ink-500">
                                 Hai già un account?{' '}
-                                <Link to="/login" className="text-wine-700 font-medium underline underline-offset-2 hover:no-underline">
+                                <Link to={`/login?redirect=${encodeURIComponent(redirect)}`} className="text-wine-700 font-medium underline underline-offset-2 hover:no-underline">
                                     Accedi
                                 </Link>
                             </p>

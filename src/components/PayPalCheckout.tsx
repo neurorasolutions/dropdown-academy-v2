@@ -1,175 +1,107 @@
 import { useState } from 'react'
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js'
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { recordPurchase } from '@/lib/purchases'
 import { supabase } from '@/lib/supabase'
-
-interface PayPalCheckoutProps {
+import { Link } from 'react-router-dom'
+interface Props {
     courseSlug: string
     courseTitle: string
     price: number
-    userId: string
-    onSuccess?: (transactionId: string) => void
+    onSuccess?: (id: string) => void
 }
-
-export function PayPalCheckout({ courseSlug, courseTitle, price, userId, onSuccess }: PayPalCheckoutProps) {
-    const [{ isPending }] = usePayPalScriptReducer()
-    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
-    const [errorMessage, setErrorMessage] = useState('')
-    const [transactionId, setTransactionId] = useState('')
-
-    if (paymentStatus === 'success') {
+async function request(path: string, body: unknown) {
+    const { data } = await supabase.auth.getSession()
+    if (!data.session) throw new Error('Sessione scaduta. Accedi di nuovo.')
+    const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+        body: JSON.stringify(body),
+    })
+    const json = await res.json()
+    if (!res.ok) throw new Error(json.error || 'Operazione non riuscita. Riprova.')
+    return json
+}
+export function PayPalCheckout({ courseSlug, courseTitle, price, onSuccess }: Props) {
+    const [{ isPending, isRejected }] = usePayPalScriptReducer()
+    const [busy, setBusy] = useState(false)
+    const [error, setError] = useState('')
+    const [order, setOrder] = useState(() => sessionStorage.getItem(`dropdown-order-${courseSlug}`) || '')
+    const [success, setSuccess] = useState(false)
+    async function capture(id: string) {
+        setBusy(true)
+        setError('')
+        setOrder(id)
+        sessionStorage.setItem(`dropdown-order-${courseSlug}`, id)
+        try {
+            const result = await request('/api/capture-order', { orderID: id })
+            if (!result.success) throw new Error(result.error)
+            sessionStorage.removeItem(`dropdown-order-${courseSlug}`)
+            setSuccess(true)
+            onSuccess?.(result.transactionId)
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Verifica non riuscita.')
+        } finally {
+            setBusy(false)
+        }
+    }
+    if (success)
         return (
-            <div className="p-8 bg-white border border-ivory-300 rounded-2xl text-center space-y-3 shadow-card">
-                <CheckCircle className="w-12 h-12 text-green-600 mx-auto" aria-hidden />
-                <h3 className="font-serif text-xl font-semibold">Pagamento completato</h3>
-                <p className="text-ink-500">
-                    Hai acquistato <strong>{courseTitle}</strong>. Il corso è ora disponibile nella tua area personale.
-                </p>
-                <p className="text-xs text-ink-400">ID transazione: {transactionId}</p>
+            <div role="status" className="card p-6">
+                <h3 className="font-serif text-xl">Acquisto completato</h3>
+                <p className="mt-3">{courseTitle} è disponibile nella tua area personale.</p>
+                <Link className="btn-primary mt-4" to={`/courses/${courseSlug}/player`}>
+                    Inizia il corso
+                </Link>
             </div>
         )
-    }
-
-    if (paymentStatus === 'error') {
-        return (
-            <div className="p-8 bg-white border border-red-200 rounded-2xl text-center space-y-3 shadow-card">
-                <AlertCircle className="w-12 h-12 text-red-600 mx-auto" aria-hidden />
-                <h3 className="font-serif text-xl font-semibold">Errore nel pagamento</h3>
-                <p className="text-ink-500">{errorMessage}</p>
-                <button
-                    onClick={() => {
-                        setPaymentStatus('idle')
-                        setErrorMessage('')
-                    }}
-                    className="btn-secondary"
-                >
-                    Riprova
-                </button>
-            </div>
-        )
-    }
-
     return (
-        <div className="space-y-5">
-            <div className="text-center">
-                <p className="text-sm text-ink-500 mb-1">Prezzo del corso</p>
-                <span className="font-serif text-4xl font-semibold text-wine-700 tabular-nums">
-                    €{price.toFixed(2)}
-                </span>
-            </div>
-
-            {isPending && (
-                <div className="flex items-center justify-center py-8" role="status">
-                    <Loader2 className="w-6 h-6 text-wine-700 animate-spin" aria-hidden />
-                    <span className="ml-3 text-ink-500">Caricamento PayPal…</span>
-                </div>
+        <div className="space-y-4">
+            <p className="font-serif text-3xl text-center text-wine-700">€{price.toFixed(2)}</p>
+            {(isPending || busy) && (
+                <p role="status">{busy ? 'Verifica del pagamento…' : 'Caricamento PayPal…'}</p>
             )}
-
-            {paymentStatus === 'processing' && (
-                <div className="flex items-center justify-center py-4" role="status">
-                    <Loader2 className="w-5 h-5 text-wine-700 animate-spin" aria-hidden />
-                    <span className="ml-2 text-ink-500">Elaborazione pagamento…</span>
-                </div>
+            {isRejected && (
+                <p role="alert">PayPal non è disponibile. Ricarica la pagina o riprova più tardi.</p>
             )}
-
-            <div className={paymentStatus === 'processing' ? 'opacity-50 pointer-events-none' : ''}>
+            {error && (
+                <p role="alert" className="text-red-700">
+                    {error}
+                </p>
+            )}
+            {order ? (
+                <div className="space-y-3">
+                    <p className="text-sm break-all">Ordine: {order}</p>
+                    <button disabled={busy} onClick={() => capture(order)} className="btn-primary w-full">
+                        Verifica accesso
+                    </button>
+                    <p className="text-xs text-ink-500">
+                        La verifica riutilizza questo ordine. Se il problema continua,{' '}
+                        <Link className="underline" to="/contact">
+                            contattaci
+                        </Link>{' '}
+                        indicando il numero d’ordine.
+                    </p>
+                </div>
+            ) : (
                 <PayPalButtons
-                    style={{
-                        layout: 'vertical',
-                        color: 'black',
-                        shape: 'rect',
-                        label: 'pay',
-                        height: 48,
-                    }}
+                    disabled={busy}
+                    style={{ layout: 'vertical', color: 'black', shape: 'rect', height: 48 }}
                     createOrder={async () => {
+                        setError('')
                         try {
-                            const response = await fetch('/api/create-order', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ courseSlug }),
-                            })
-
-                            if (!response.ok) {
-                                throw new Error('Errore nella creazione dell\'ordine')
-                            }
-
-                            const data = await response.json()
-                            return data.orderID
-                        } catch (error) {
-                            console.error('Create order error:', error)
-                            setPaymentStatus('error')
-                            setErrorMessage('Impossibile creare l\'ordine. Riprova più tardi.')
-                            throw error
+                            const result = await request('/api/create-order', { courseSlug })
+                            return result.orderID
+                        } catch (e) {
+                            setError(e instanceof Error ? e.message : 'Impossibile creare l’ordine.')
+                            throw e
                         }
                     }}
                     onApprove={async (data) => {
-                        setPaymentStatus('processing')
-
-                        try {
-                            // Token di sessione fresco per l'autorizzazione server-side
-                            const { data: sessionData } = await supabase.auth.getSession()
-                            const userToken = sessionData?.session?.access_token
-
-                            if (!userToken) {
-                                throw new Error('Sessione scaduta: ricarica la pagina e accedi di nuovo.')
-                            }
-
-                            const response = await fetch('/api/capture-order', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    orderID: data.orderID,
-                                    courseSlug,
-                                    userToken,
-                                }),
-                            })
-
-                            if (!response.ok) {
-                                throw new Error('Errore nella conferma del pagamento')
-                            }
-
-                            const captureData = await response.json()
-                            
-
-                            if (captureData.success) {
-                                setTransactionId(captureData.transactionId)
-                                setPaymentStatus('success')
-                                // La registrazione avviene server-side nel capture;
-                                // recordPurchase qui è fallback di sicurezza (idempotente per RLS).
-                                try {
-                                    await recordPurchase(userId, courseSlug, price, captureData.transactionId)
-                                } catch (e) {
-                                    console.error('Fallback client purchase record failed:', e)
-                                }
-                                onSuccess?.(captureData.transactionId)
-                            } else {
-                                throw new Error(captureData.error || 'Pagamento non completato')
-                            }
-                        } catch (error) {
-                            console.error('Capture error:', error)
-                            setPaymentStatus('error')
-                            setErrorMessage(
-                                error instanceof Error
-                                    ? error.message
-                                    : 'Si è verificato un errore. Contattaci per assistenza.'
-                            )
-                        }
+                        await capture(data.orderID)
                     }}
-                    onError={(err) => {
-                        console.error('PayPal error:', err)
-                        setPaymentStatus('error')
-                        setErrorMessage('Errore PayPal. Riprova più tardi.')
-                    }}
-                    onCancel={() => {
-                        setPaymentStatus('idle')
-                    }}
+                    onCancel={() => setError('Pagamento annullato. Puoi riprovare quando vuoi.')}
+                    onError={() => setError('PayPal non ha completato l’operazione. Riprova più tardi.')}
                 />
-            </div>
-
-            <p className="text-center text-xs text-ink-400">
-                Pagamento sicuro tramite PayPal. I tuoi dati sono protetti.
-            </p>
+            )}
         </div>
     )
 }

@@ -8,8 +8,15 @@ export type Json =
 
 export interface Database {
     public: {
+        Views: { [_ in never]: never }
+        Functions: {
+            dropdown_lesson_media: { Args: {p_course_id:string}; Returns: {id:string;video_id:string|null;resources:Json}[] }
+            dropdown_certificate: { Args: {p_slug:string}; Returns: {student_name:string;course_title:string;completed_at:string;certificate_id:string}[] }
+        }
+
         Tables: {
             dropdown_profiles: {
+                Relationships: []
                 Row: {
                     id: string
                     email: string
@@ -36,6 +43,7 @@ export interface Database {
                 }
             }
             dropdown_courses: {
+                Relationships: []
                 Row: {
                     id: string
                     slug: string
@@ -44,7 +52,7 @@ export interface Database {
                     price: number
                     thumbnail_url: string | null
                     promo_video_url: string | null
-                    category: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments'
+                    category: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments' | 'altro'
                     level: 'beginner' | 'intermediate' | 'advanced'
                     is_published: boolean
                     created_at: string
@@ -58,7 +66,7 @@ export interface Database {
                     price: number
                     thumbnail_url?: string | null
                     promo_video_url?: string | null
-                    category: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments'
+                    category: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments' | 'altro'
                     level?: 'beginner' | 'intermediate' | 'advanced'
                     is_published?: boolean
                     created_at?: string
@@ -72,7 +80,7 @@ export interface Database {
                     price?: number
                     thumbnail_url?: string | null
                     promo_video_url?: string | null
-                    category?: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments'
+                    category?: 'modulare' | 'ableton' | 'serum' | 'max-msp' | 'pigments' | 'altro'
                     level?: 'beginner' | 'intermediate' | 'advanced'
                     is_published?: boolean
                     created_at?: string
@@ -80,6 +88,7 @@ export interface Database {
                 }
             }
             dropdown_course_modules: {
+                Relationships: []
                 Row: {
                     id: string
                     course_id: string
@@ -103,6 +112,7 @@ export interface Database {
                 }
             }
             dropdown_lessons: {
+                Relationships: []
                 Row: {
                     id: string
                     module_id: string
@@ -141,6 +151,7 @@ export interface Database {
                 }
             }
             dropdown_purchases: {
+                Relationships: []
                 Row: {
                     id: string
                     user_id: string
@@ -173,6 +184,7 @@ export interface Database {
                 }
             }
             dropdown_user_progress: {
+                Relationships: []
                 Row: {
                     id: string
                     user_id: string
@@ -205,6 +217,7 @@ export interface Database {
                 }
             }
             dropdown_free_downloads: {
+                Relationships: []
                 Row: {
                     id: string
                     title: string
@@ -237,6 +250,7 @@ export interface Database {
                 }
             }
             dropdown_contact_messages: {
+                Relationships: []
                 Row: {
                     id: string
                     name: string
